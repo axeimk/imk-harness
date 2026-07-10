@@ -1,0 +1,8 @@
+# imk-harness: Codex 設定の雛形
+# 既存の ~/.codex/config.toml がある場合、install.sh は上書きしない。
+# 必要な項目をここに集約し、手動でマージすること。
+
+# MCP サーバーを追加する場合の例:
+# [mcp_servers.example]
+# command = "npx"
+# args = ["-y", "@example/mcp-server"]
