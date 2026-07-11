@@ -18,8 +18,9 @@
 #   - スキルは各ツールがネイティブに読む場所へ symlink する
 #       Claude Code: ~/.claude/skills
 #       Codex:       ~/.agents/skills（公式のスキャン場所。description による自動発火が効く）
-#       Cursor:      ~/.agents/skills（.claude/skills も互換スキャンする）
-#   - Claude + Codex + Cursor 併用時、Cursor には同名スキルが二重に見える可能性があるが許容する
+#       Cursor:      ~/.agents/skills（ネイティブ扱いで常にスキャンされる）
+#   - Claude + Codex + Cursor 併用時、Cursor には ~/.claude/skills の互換スキャンで同名スキルが
+#     二重に見える。Cursor の third-party 設定 OFF で解消できるため案内する（ADR-0003）
 #   - 既存の実ファイルを置き換える場合は .bak.<timestamp> に退避
 #   - settings.json / config.toml は既存があれば触らない（手動マージ）
 set -euo pipefail
@@ -66,9 +67,9 @@ if [ $((USE_CLAUDE + USE_CODEX + USE_CURSOR)) -eq 0 ]; then
   exit 1
 fi
 
-# ~/.agents/skills が必要か（Codex を使う、または Cursor のみ）
+# ~/.agents/skills が必要か（Codex / Cursor はともにネイティブでスキャンする — ADR-0003）
 NEED_AGENTS=0
-if [ "$USE_CODEX" -eq 1 ] || { [ "$USE_CURSOR" -eq 1 ] && [ "$USE_CLAUDE" -eq 0 ]; }; then
+if [ "$USE_CODEX" -eq 1 ] || [ "$USE_CURSOR" -eq 1 ]; then
   NEED_AGENTS=1
 fi
 
@@ -118,10 +119,10 @@ apply_changes() {
 
   # 4. Cursor 向け案内
   if [ "$USE_CURSOR" -eq 1 ]; then
-    if [ "$USE_CLAUDE" -eq 1 ] && [ "$USE_CODEX" -eq 1 ]; then
-      notice "Cursor には ~/.claude/skills と ~/.agents/skills の同名スキルが二重に見える可能性があります（許容する方針）。"
+    if [ "$USE_CLAUDE" -eq 1 ]; then
+      notice "Cursor には ~/.claude/skills の互換スキャンで同名スキルが二重に見えます。Cursor Settings > Rules, Skills, Subagents > 'Include third-party Plugins, Skills, and other configs' を OFF にすると解消します（OFF にするとプロジェクト側の .claude/ 系設定も Cursor から見えなくなる点に注意。ADR-0003 参照）。"
     fi
-    notice "Cursor のユーザーレベル常駐指示: Cursor Settings > Rules に claude/CLAUDE.md の内容を貼り付けてください。"
+    notice "Cursor のユーザーレベル常駐指示: Cursor Settings > Rules, Skills, Subagents の User Rules に claude/CLAUDE.md の内容を貼り付けてください。"
   fi
 }
 
