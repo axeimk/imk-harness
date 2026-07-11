@@ -25,11 +25,14 @@ imk-harness/
 ├── codex/
 │   ├── AGENTS.md          # 生成物（build.sh が作る）→ ~/.codex/AGENTS.md の管理ブロックへ
 │   └── config.toml        # Codex 設定の雛形
+├── docs/adr/              # 設計判断の記録（ADR）
 ├── build.sh               # 原本から CLAUDE.md / AGENTS.md を生成
 ├── install.sh             # 使うツールを選んで最適配置で展開（再実行 = アップデート）
 ├── uninstall.sh           # ハーネス由来の symlink を除去し、バックアップを復元
 └── lib.sh                 # install/uninstall 共通ヘルパー
 ```
+
+設計の背景・経緯は [docs/adr/](docs/adr/README.md) を参照。
 
 ## 使い方
 
