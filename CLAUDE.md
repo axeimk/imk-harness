@@ -84,3 +84,7 @@ shared/skills/*/ （スキル実体）
 新しい ADR を追加し、古い ADR のステータスを「廃止（ADR-XXXX により置換）」に変更する。
 特に ADR-0003（スキル配置）は Claude Code が `.agents/skills` に対応した時点で
 改訂する前提（[claude-code#31005](https://github.com/anthropics/claude-code/issues/31005)）。
+
+ユーザー環境に展開されるファイル（`shared/` 配下と生成物）には、このリポジトリ内部への
+参照（ADR 番号、`docs/` へのパス等）を書かない。展開先では参照できず、展開先プロジェクトが
+独自の ADR を持っている場合はエージェントを混乱させる。

@@ -12,3 +12,4 @@
 | [0005](0005-plan-confirm-apply.md) | install / uninstall はプラン表示 → 確認 → 適用の 2 段階実行 | 承認済み |
 | [0006](0006-non-destructive-policy.md) | ユーザーの持ち物に触れない非破壊方針 | 承認済み |
 | [0007](0007-verify-skill-as-runtime-recipe.md) | プロジェクト verify スキルは動作確認レシピとする | 承認済み |
+| [0008](0008-propose-record-respect.md) | 汎用層は強制しない — 提案 → 記録 → 尊重 | 承認済み |
