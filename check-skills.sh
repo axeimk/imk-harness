@@ -21,8 +21,10 @@ for dir in shared/skills/*/; do
 
   "$validator" "$dir" || errors=$((errors + 1))
 
-  # リポジトリ専用: 展開先で解決できないリポジトリ内部参照の混入を防ぐ（CLAUDE.md の方針）
-  if LC_ALL=C grep -rnE 'ADR-[0-9]{4}|docs/adr/' "$dir"; then
+  # リポジトリ専用: 展開先で解決できないリポジトリ内部参照の混入を防ぐ（CLAUDE.md の方針）。
+  # 禁止は「このリポジトリの ADR への参照」（ADR 番号、docs/adr へのリンク）。
+  # 展開先プロジェクト自身の置き場を散文で案内する `docs/adr/` は正当なので対象外。
+  if LC_ALL=C grep -rnE 'ADR-[0-9]{4}|\]\((\.\./)*docs/adr' "$dir"; then
     echo "ERROR: ${skill}: リポジトリ内部への参照（ADR 番号等）は展開先で解決できません"
     errors=$((errors + 1))
   fi
