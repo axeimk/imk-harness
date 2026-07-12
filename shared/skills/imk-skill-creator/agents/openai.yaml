@@ -1,0 +1,4 @@
+interface:
+  display_name: "IMK Skill Creator"
+  short_description: "Claude Code / Codex / Cursor 互換のスキルを作成・改善する"
+  default_prompt: "$imk-skill-creator を使って、この会話で行った作業をスキル化する。"
