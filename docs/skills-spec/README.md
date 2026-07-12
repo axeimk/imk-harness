@@ -13,6 +13,7 @@
 | [claude-code.md](claude-code.md) | Claude Code の Skills 仕様（拡張フロントマター、動的コンテキスト注入 ほか） |
 | [codex.md](codex.md) | Codex の Skills 仕様（`agents/openai.yaml` ほか） |
 | [cursor.md](cursor.md) | Cursor の Agent Skills 仕様（Rules との関係 ほか） |
+| [claude-code-builtin-verify.md](claude-code-builtin-verify.md) | Claude Code ビルトイン verify スキルの調査（バイナリから抽出した原文つき） |
 
 ## 共通基盤: Agent Skills オープン標準
 

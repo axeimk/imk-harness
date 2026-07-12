@@ -30,6 +30,12 @@ for dir in shared/skills/*/; do
   fi
 done
 
+# リポジトリ専用: shared/instructions/（生成物の原本）も同じ内部参照検査の対象。
+if LC_ALL=C grep -rnE 'ADR-[0-9]{4}|\]\((\.\./)*docs/adr' shared/instructions/; then
+  echo "ERROR: shared/instructions/: リポジトリ内部への参照（ADR 番号等）は展開先で解決できません"
+  errors=$((errors + 1))
+fi
+
 if [ "$errors" -gt 0 ]; then
   echo "NG: ${errors} 件のエラー"
   exit 1

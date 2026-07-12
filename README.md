@@ -1,51 +1,38 @@
 # imk-harness
 
 Claude Code / Codex / Cursor 用の汎用ハーネス（ユーザースコープの設定・知識・規約の一式）。
+ホームディレクトリ（`~/.claude/` `~/.codex/` `~/.agents/`）へ展開して使う。
+
+この README は**ハーネスを導入・運用する人**向け。読みたいこと別の入口:
+
+| 読みたいこと | 場所 |
+|---|---|
+| 導入・更新・アンインストールの手順と挙動 | この README |
+| このリポジトリを変更する（開発ガイド・アーキテクチャ） | [CLAUDE.md](CLAUDE.md)（`AGENTS.md` は同一内容） |
+| 設計判断とその経緯 | [docs/adr/](docs/adr/README.md) |
+| 3 ツールの Skills 仕様の調査資料 | [docs/skills-spec/](docs/skills-spec/README.md) |
+| 用語集 | [CONTEXT.md](CONTEXT.md) |
+
+## 考え方
 
 **このリポジトリの本質は「各プロジェクトの特化層を育てるためのハーネス」である。**
 一番大事な持ち物は個々の設定ではなく、特化層の育て方の規約・それを実行する
 harness-check スキル・特化層で実証されたものを還流させる昇格ルールの 3 つ。
-
-用語:
 
 | 層 | スコープ | 実体 |
 |---|---|---|
 | **汎用層**（このリポジトリ） | **ユーザースコープ** | `~/.claude/` `~/.codex/` `~/.agents/` に展開される。全プロジェクト共通 |
 | **特化層**（各プロジェクトで育てる） | **プロジェクトスコープ** | 各リポジトリ内の CLAUDE.md / AGENTS.md / `.claude/` 等。そのプロジェクト専用 |
 
-方針:
-
 - **汎用層（このリポジトリ）は最小限に保つ。** 個人的な好み、共通 permissions、そして「プロジェクト特化層の育て方」の規約だけを持つ。
 - **特化層は各プロジェクトのリポジトリで育てる。** ビルド・テスト方法、アーキテクチャ知識、プロジェクト固有スキルはそちらに置く。
 - **昇格ルール:** 2〜3 プロジェクトで同じものを書いたと気づいたら、そのときはじめて汎用層へ移す。
 
-## 構成
+育てる順番は、permissions と verify の規約（承認疲れをなくし、自己検証させる）→
+常駐指示（薄く保つ）→ スキル（繰り返した作業から 1 つずつ）→
+hooks（「毎回言っても守らない」ことの強制）→ MCP / サブエージェント（必要になってから）。
 
-```
-imk-harness/
-├── shared/
-│   ├── instructions/      # 指示の原本（単一ソース）。編集するのはここ
-│   │   ├── 00-style.md            # 応答・ドキュメントのスタイル
-│   │   ├── 10-workflow.md         # 作業の進め方（verify 必須など）
-│   │   └── 20-project-harness.md  # 特化層の育て方の規約
-│   └── skills/            # スキルの実体（ツール非依存の SKILL.md 形式）
-│       └── harness-check/ #   特化層をブートストラップするスキル（テンプレート同梱）
-├── claude/
-│   ├── CLAUDE.md          # 生成物（build.sh が作る）→ ~/.claude/CLAUDE.md の管理ブロックへ
-│   └── settings.json      # 共通 permissions の雛形
-├── codex/
-│   ├── AGENTS.md          # 生成物（build.sh が作る）→ ~/.codex/AGENTS.md の管理ブロックへ
-│   └── config.toml        # Codex 設定の雛形
-├── docs/adr/              # 設計判断の記録（ADR）
-├── build.sh               # 原本から CLAUDE.md / AGENTS.md を生成
-├── install.sh             # 使うツールを選んで最適配置で展開（再実行 = アップデート）
-├── uninstall.sh           # ハーネス由来の symlink を除去し、バックアップを復元
-└── lib.sh                 # install/uninstall 共通ヘルパー
-```
-
-設計の背景・経緯は [docs/adr/](docs/adr/README.md) を参照。
-
-## 使い方
+## インストール
 
 ```sh
 ./install.sh                              # 対話式で使うツールを選ぶ
@@ -61,7 +48,7 @@ imk-harness/
 - `~/.claude/settings.json` と `~/.codex/config.toml` は既存ファイルがある場合は上書きしない。permissions は `claude/settings.json` の内容を手動でマージすること。
 - 既存の実ファイルを置き換える場合は `.bak.<timestamp>` に退避される。
 
-## CLAUDE.md / AGENTS.md は「管理ブロック」方式
+## ホーム側の CLAUDE.md / AGENTS.md は「管理ブロック」方式
 
 `~/.claude/CLAUDE.md` と `~/.codex/AGENTS.md` は symlink ではなく実ファイルで、ハーネスはマーカーで囲まれたブロックだけを管理する。**ブロックの外は自由編集エリア**で、アップデートでもアンインストールでも保持される。
 
@@ -101,27 +88,12 @@ imk-harness/
 | バックアップが複数ある | 復元されるのは最新の 1 つのみ。残りはサマリで案内 |
 | 複数クローンからのインストール | 想定しない（1 クローンを正とする） |
 
-## スキルの配置ポリシー
+## スキルの配置
 
-各ツールがネイティブに読む場所へ symlink する。Codex の公式スキャン場所は `.agents/skills`（オープン標準）で、description による自動発火が効く。
+実体は `shared/skills/` にあり、install.sh が選択したツールのネイティブなスキャン場所へ
+symlink する（Claude Code: `~/.claude/skills/`、Codex / Cursor: `~/.agents/skills/`）。
+どこに何が張られるかは install 時のプラン表示で確認できる。
 
-| 選択 | スキルの物理配置 | 補足 |
-|---|---|---|
-| Claude のみ | `~/.claude/skills/` | |
-| Codex のみ | `~/.agents/skills/` | Codex 公式のスキャン場所 |
-| Cursor のみ | `~/.agents/skills/` | Cursor もネイティブに読む |
-| Claude + Codex | `~/.claude/skills/` と `~/.agents/skills/` の両方 | |
-| Claude + Cursor | `~/.claude/skills/` のみ | Cursor が互換読みで認識。重複なし |
-| Codex + Cursor | `~/.agents/skills/` のみ | 両ツールともネイティブ。重複なし |
-| 3 つすべて | `~/.claude/skills/` と `~/.agents/skills/` の両方 | Cursor に同名スキルが二重に見える可能性があるが許容（Codex の自動発火を優先） |
-
-Claude Code が `.agents/skills` に対応したら（望み薄）、正本を `~/.agents/skills/` の 1 箇所に寄せて単純化する予定
-（[anthropics/claude-code#31005](https://github.com/anthropics/claude-code/issues/31005) をウォッチ）。
-
-## 育て方の優先順位
-
-1. permissions と verify の規約（承認疲れをなくし、自己検証させる）
-2. 常駐指示（薄く保つ）
-3. スキル（繰り返した作業から 1 つずつ）
-4. hooks（「毎回言っても守らない」ことが出てきたら強制へ昇格）
-5. MCP / サブエージェント（必要になってから）
+ツールの組み合わせごとの配置・Cursor での重複表示の扱い・決定の経緯は
+[ADR-0003](docs/adr/0003-skill-placement.md) を参照。Claude Code が `.agents/skills` に
+対応した時点で `~/.agents/skills/` の 1 箇所に統合する予定。
