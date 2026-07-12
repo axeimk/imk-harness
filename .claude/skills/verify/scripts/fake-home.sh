@@ -24,6 +24,11 @@ if [ "${1:-}" = "--reset" ]; then
   exit 0
 fi
 
+if [ $# -eq 0 ]; then
+  echo "使い方: $0 <コマンド...> | --path | --reset" >&2
+  exit 2
+fi
+
 dir=""
 if [ -f "$state" ]; then
   dir="$(cat "$state")"
@@ -37,15 +42,9 @@ if [ "$dir" = "${HOME}" ] || [ "$dir" = "/" ]; then
   exit 1
 fi
 
-case "${1:-}" in
-  --path)
-    echo "$dir"
-    exit 0
-    ;;
-  "")
-    echo "使い方: $0 <コマンド...> | --path | --reset" >&2
-    exit 2
-    ;;
-esac
+if [ "$1" = "--path" ]; then
+  echo "$dir"
+  exit 0
+fi
 
 HOME="$dir" "$@"
