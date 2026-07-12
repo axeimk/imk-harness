@@ -14,3 +14,4 @@
 | [0007](0007-verify-skill-as-runtime-recipe.md) | プロジェクト verify スキルは動作確認レシピとする | 承認済み |
 | [0008](0008-propose-record-respect.md) | 汎用層は強制しない — 提案 → 記録 → 尊重 | 承認済み |
 | [0009](0009-skill-graceful-degradation.md) | 共有スキルのツール間差異はネイティブ吸収で扱う | 承認済み |
+| [0010](0010-domain-modeling-and-grilling.md) | ユビキタス言語と設計記録の規律を mattpocock/skills から輸入する | 承認済み |
