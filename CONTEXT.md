@@ -29,8 +29,9 @@ _避ける_: ドライラン方式（DRYRUN は 2 段階実行の前半を指す
 **共有スキル** (`shared skill`):
 `shared/skills/` に置かれ、symlink で 3 ツール（Claude Code / Codex / Cursor）に配布されるスキル。どのツールで読まれても本文が成立するように書く。
 
-**ハーネス節** (`harness section`):
-プロジェクト CLAUDE.md / AGENTS.md 内の、ハーネス提案の採否を記録する節。「使わない」と記録された項目は再提案しない。
+**HARNESS.md** (`harness record`):
+プロジェクトルートに置く、ハーネス提案の採否を記録するファイル。「使わない」と記録された項目は再提案しない。
+_避ける_: ハーネス節（旧規約: CLAUDE.md / AGENTS.md 内の節に記録していた。ADR-0011 で廃止）
 
 ## 関係
 

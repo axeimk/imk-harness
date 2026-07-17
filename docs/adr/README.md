@@ -12,6 +12,7 @@
 | [0005](0005-plan-confirm-apply.md) | install / uninstall はプラン表示 → 確認 → 適用の 2 段階実行 | 承認済み |
 | [0006](0006-non-destructive-policy.md) | ユーザーの持ち物に触れない非破壊方針 | 承認済み |
 | [0007](0007-verify-skill-as-runtime-recipe.md) | プロジェクト verify スキルは動作確認レシピとする | 承認済み |
-| [0008](0008-propose-record-respect.md) | 汎用層は強制しない — 提案 → 記録 → 尊重 | 承認済み |
+| [0008](0008-propose-record-respect.md) | 汎用層は強制しない — 提案 → 記録 → 尊重 | 廃止（ADR-0011 により置換） |
 | [0009](0009-skill-graceful-degradation.md) | 共有スキルのツール間差異はネイティブ吸収で扱う | 承認済み |
 | [0010](0010-domain-modeling-and-grilling.md) | ユビキタス言語と設計記録の規律を mattpocock/skills から輸入する | 承認済み |
+| [0011](0011-pull-based-harness-check.md) | 特化層整備を harness-check に一任し、採否を HARNESS.md に記録する | 承認済み |
