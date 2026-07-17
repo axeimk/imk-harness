@@ -4,6 +4,8 @@
 - 日付: 2026-07-12
 - 改訂: 2026-07-12 — Codex / Cursor の実装調査を反映。配置の決定は不変。
   Cursor の重複表示は「単に許容」から「third-party 設定 OFF の案内で解消」に精緻化
+- 改訂: 2026-07-18 — 同じ原則（実体はツール非依存の場所、ネイティブ位置へ symlink）を
+  プロジェクト層へ延長。決定の原則は不変
 
 ## コンテキスト
 
@@ -42,6 +44,21 @@ Cursor のスキャン対象は 2 系統に分かれることが CLI（cursor-ag
 - Claude Code + Cursor 併用時は両方へ配置され、Cursor（IDE）に重複表示が生じる。
   これは上記 third-party 設定を OFF にすることで解消できるため、install.sh がその案内を
   表示する（OFF の副作用と cursor-agent CLI の未対応は上記コンテキスト参照）
+
+### プロジェクト層への延長（2026-07-18 改訂）
+
+プロジェクト層のスキル（harness-check が作る verify 等）には install.sh が無いため、
+実体の置き場所を次のとおり定める:
+
+- 複数ツール使用時: `.agents/skills/<name>/` に実体を置き、Claude Code 用に
+  `.claude/skills/<name>` → `../../.agents/skills/<name>` の symlink を張る。
+  `.agents` はツール非依存で、Claude Code が対応した時点
+  （[claude-code#31005](https://github.com/anthropics/claude-code/issues/31005)）で
+  symlink を消すだけで一本化できる。逆向き（`.claude` に実体）だと将来実体の移動が要る
+- 単一ツール使用時: そのツールのネイティブ位置に直接実体を置く（symlink 不要）
+
+この指針の展開版は imk-skill-creator スキルの `references/conventions.md` と
+harness-check スキルに記載する（展開先で読めるよう、本 ADR への参照は書かない）。
 
 ## 検討した代替案
 
