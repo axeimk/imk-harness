@@ -26,7 +26,7 @@ for path in sys.argv[1:]:
     echo "ERROR: ${f}: 変数の直後に全角文字があります（\${VAR} 形式にする）"
     errors=$((errors + 1))
   fi
-done < <(find . -name '*.sh' -not -path './.git/*' | sort)
+done < <(find . -name '*.sh' -not -path './.git/*' -not -path './node_modules/*' | sort)
 
 if [ "$errors" -gt 0 ]; then
   echo "NG: ${errors} 件のエラー"

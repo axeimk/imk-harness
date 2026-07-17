@@ -1,0 +1,11 @@
+{
+  "name": "imk-harness",
+  "private": true,
+  "description": "自動テスト（bats）の依存管理用。ハーネス本体は Node に依存しない。",
+  "scripts": {
+    "test": "bats tests"
+  },
+  "devDependencies": {
+    "bats": "^1.13.0"
+  }
+}

@@ -16,3 +16,4 @@
 | [0009](0009-skill-graceful-degradation.md) | 共有スキルのツール間差異はネイティブ吸収で扱う | 承認済み |
 | [0010](0010-domain-modeling-and-grilling.md) | ユビキタス言語と設計記録の規律を mattpocock/skills から輸入する | 承認済み |
 | [0011](0011-pull-based-harness-check.md) | 特化層整備を harness-check に一任し、採否を HARNESS.md に記録する | 承認済み |
+| [0012](0012-automated-tests-with-bats.md) | 自動テストを bats で導入する（npm devDependency 管理） | 承認済み |
