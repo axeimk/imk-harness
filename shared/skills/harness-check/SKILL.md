@@ -9,13 +9,14 @@ description: プロジェクト特化層（CLAUDE.md / AGENTS.md、verify スキ
 
 ## 手順
 
-1. **使用ツールの確認**: このプロジェクトで使うコーディングエージェント（Claude Code / Codex / Cursor）をユーザーに確認する。既存ファイルの有無から推測しない（CLAUDE.md しか無いプロジェクトでこれから Codex を使い始めることもある）。`HARNESS.md` に記録済みならそれに従い、再確認しない。回答は手順 8 で `HARNESS.md` に記録する。以降の手順の要否と配置場所はこの選択で決まる。
+1. **使用ツールの確認**: このプロジェクトで使うコーディングエージェント（Claude Code / Codex / Cursor）をユーザーに確認する。既存ファイルの有無から推測しない（CLAUDE.md しか無いプロジェクトでこれから Codex を使い始めることもある）。`HARNESS.md` に記録済みならそれに従い、再確認しない。回答は手順 9 で `HARNESS.md` に記録する。以降の手順の要否と配置場所はこの選択で決まる。
 2. **現状確認**（プロジェクトルートで）
    - `HARNESS.md`（採否の記録）があるか。旧規約の記録（CLAUDE.md / AGENTS.md の「ハーネス」節）が残っていないかも確認する
    - `CLAUDE.md` があるか（Claude Code を使う場合）
    - `AGENTS.md` があるか（Codex / Cursor を使う場合）
    - verify スキルがあるか（Claude Code: `.claude/skills/verify/SKILL.md`、Codex / Cursor: `.agents/skills/verify/SKILL.md`）
    - `CONTEXT.md`（プロジェクト用語集）があるか
+   - ADR 置き場（`docs/adr/` など設計記録のディレクトリ）があるか
    - プロジェクト固有 permissions / hooks があるか（Claude Code: `.claude/settings.json`、Codex: `config.toml`、Cursor: `.cursor/`）
 3. **欠けているものを項目ごとに提示し、要る / 要らないをユーザーに選ばせる。** 勝手に全部作らない。`HARNESS.md` に「使わない」と記録済みの項目は一覧に載せない（ユーザーが明示的に見直しを求めたときを除く）。
 4. **CLAUDE.md / AGENTS.md の作成**: `templates/CLAUDE.md.template` を土台に、リポジトリを調査して埋める（ビルド・テストコマンドは package.json / Makefile / pyproject.toml 等から実際に確認する。推測で書かない）。ファイル名は使用ツールに合わせる。両方必要な場合は AGENTS.md（ツール非依存側）を実体にし、CLAUDE.md をそこへの symlink にする（コピーを 2 つ置くと乖離する）。差分が必要になったときだけ実ファイルに分ける。
@@ -24,8 +25,9 @@ description: プロジェクト特化層（CLAUDE.md / AGENTS.md、verify スキ
    - description はテンプレートのままにせず、プロジェクト名と対象（何を変更したときに使うか）を入れて具体化する
    - 作成後、imk-skill-creator スキル（あれば）に同梱の `scripts/validate-skill.sh` で検査し、レシピどおりに一度起動して動くことを確認する
 6. **CONTEXT.md の作成**（選ばれた場合）: domain-modeling スキル（あれば）の手順とテンプレートに従う。その時点で確立している用語だけを書き、リポジトリを走査した一括収集はしない。確立した用語がまだ無いプロジェクトでは「最初の用語が確定したときに作る」で足りるので、無理に作らない。
-7. **lint / test hooks の提案**（任意）: 編集後の lint など機械的に強制したい検査があれば、使用ツールごとの hooks 設定を提案する（Claude Code: `.claude/settings.json`、Codex: `hooks.json` または `config.toml` の `[hooks]`、Cursor: `.cursor/hooks.json`）。テストスイート全実行のような重い処理は hooks に入れない。
-8. **採否の記録**: 使用ツール（手順 1）と、「要らない」と選ばれた項目をプロジェクトルートの `HARNESS.md` に記録し、以後どのエージェントも再確認・再提案しないようにする（例: `- verify スキル: 使わない（2026-07-12 ユーザー判断）`）。ファイルが無ければ `templates/HARNESS.md.template` を土台に作る。
+7. **ADR（設計記録）の導入**（選ばれた場合）: `templates/adr-README.md.template` から `docs/adr/README.md` を作成し、CLAUDE.md / AGENTS.md に「設計記録」節を追記する。節はトリガーだけを持たせ、2 行以内に収める（例: 「設計上の決定は `docs/adr/` に記録する。基準と形式は `docs/adr/README.md` に従う」）。記録する基準・形式・運用の詳細は README 側が持つので、常駐指示には書かない。**最初の ADR はここでは書かない** — 記録すべき決定が出た時点で、README を手本にどのエージェントでも書ける。既存の ADR 置き場・形式があるプロジェクトではそれを尊重し、README の配置は規約が明文化されていない場合の提案にとどめる。
+8. **lint / test hooks の提案**（任意）: 編集後の lint など機械的に強制したい検査があれば、使用ツールごとの hooks 設定を提案する（Claude Code: `.claude/settings.json`、Codex: `hooks.json` または `config.toml` の `[hooks]`、Cursor: `.cursor/hooks.json`）。テストスイート全実行のような重い処理は hooks に入れない。
+9. **採否の記録**: 使用ツール（手順 1）と、「要らない」と選ばれた項目をプロジェクトルートの `HARNESS.md` に記録し、以後どのエージェントも再確認・再提案しないようにする（例: `- verify スキル: 使わない（2026-07-12 ユーザー判断）`）。ファイルが無ければ `templates/HARNESS.md.template` を土台に作る。
 
 ## 注意
 
