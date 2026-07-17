@@ -5,17 +5,61 @@
 # 実行モデル（2段階実行）:
 #   DRYRUN=1 で apply_changes を呼ぶと、ファイルには一切触れず PLAN に予定を積む。
 #   プランを表示してユーザーが承認したら、DRYRUN=0 で同じ apply_changes を本実行する。
+#
+# 変更系ヘルパーの書き方:
+#   実 FS 操作は必ず [ "$DRYRUN" -eq 0 ] で囲み、表示は report 経由にする
+#   （report が DRYRUN 中はプランに積み、本実行中はその場で表示する）。
 
 DRYRUN=0
 PLAN=()
 NOTICES=()
 
-plan()   { PLAN+=("$1"); }
 notice() { NOTICES+=("$1"); }
 
 # 管理ブロックのマーカー（ASCII のみ — bash 3.2 / macOS sed の多バイト問題を回避）
 BLOCK_BEGIN='<!-- >>> imk-harness:begin >>> -->'
 BLOCK_END='<!-- <<< imk-harness:end <<< -->'
+
+# ---------------------------------------------------------------
+# 出力
+# ---------------------------------------------------------------
+# 色は端末に直接出すときだけ有効化する（パイプ・CI・NO_COLOR ではプレーン）。
+# テストは非 TTY で走るため、色の有無がアサーションに影響しない。
+
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != "dumb" ]; then
+  C_RESET=$'\033[0m' C_BOLD=$'\033[1m' C_DIM=$'\033[2m'
+  C_RED=$'\033[31m' C_GREEN=$'\033[32m' C_YELLOW=$'\033[33m' C_CYAN=$'\033[36m'
+else
+  C_RESET='' C_BOLD='' C_DIM='' C_RED='' C_GREEN='' C_YELLOW='' C_CYAN=''
+fi
+
+TAB=$'\t'
+
+ui_header() { printf '%s==>%s %s%s%s\n' "${C_CYAN}${C_BOLD}" "$C_RESET" "$C_BOLD" "$1" "$C_RESET"; }
+ui_ok()     { printf '%s✓ %s%s\n' "${C_GREEN}${C_BOLD}" "$1" "$C_RESET"; }
+ui_warn()   { printf '%s⚠ %s%s\n' "$C_YELLOW" "$1" "$C_RESET"; }
+ui_dim()    { printf '%s%s%s\n' "$C_DIM" "$1" "$C_RESET"; }
+
+# 動詞（link / remove 等）を色付き・幅揃えで 1 行表示する
+ui_action() {
+  local verb="$1" detail="$2" color
+  case "$verb" in
+    remove|prune|delete)           color="$C_RED" ;;
+    backup|skip)                   color="$C_YELLOW" ;;
+    update|migrate|restore|relink) color="$C_CYAN" ;;
+    *)                             color="$C_GREEN" ;;  # link / copy / create / append
+  esac
+  printf '  %s%-8s%s %s\n' "$color" "$verb" "$C_RESET" "$detail"
+}
+
+# 変更の報告: DRYRUN 中はプランに積み、本実行中はその場で表示する
+report() {
+  if [ "$DRYRUN" -eq 1 ]; then
+    PLAN+=("$1${TAB}$2")
+  else
+    ui_action "$1" "$2"
+  fi
+}
 
 # ---------------------------------------------------------------
 # 基本操作
@@ -28,27 +72,26 @@ link() {
   if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
     return 0
   fi
-  if [ "$DRYRUN" -eq 1 ]; then
-    if [ -L "$dst" ]; then
-      plan "relink: $dst -> $src"
-    elif [ -e "$dst" ]; then
-      plan "backup: $dst -> $dst.bak.$TS"
-      plan "link:   $dst -> $src"
-    else
-      plan "link:   $dst -> $src"
+  if [ -L "$dst" ]; then
+    if [ "$DRYRUN" -eq 0 ]; then
+      rm "$dst"
+      ln -s "$src" "$dst"
     fi
+    report relink "$dst -> $src"
     return 0
   fi
-  mkdir -p "$(dirname "$dst")"
-  if [ -L "$dst" ]; then
-    rm "$dst"
-  elif [ -e "$dst" ]; then
-    mv "$dst" "$dst.bak.$TS"
-    echo "backup: $dst -> $dst.bak.$TS"
-    notice "既存ファイルを退避しました: $dst.bak.${TS}（内容を確認し、不要なら削除してください）"
+  if [ -e "$dst" ]; then
+    if [ "$DRYRUN" -eq 0 ]; then
+      mv "$dst" "$dst.bak.$TS"
+      notice "既存ファイルを退避しました: $dst.bak.${TS}（内容を確認し、不要なら削除してください）"
+    fi
+    report backup "$dst -> $dst.bak.$TS"
   fi
-  ln -s "$src" "$dst"
-  echo "link:   $dst -> $src"
+  if [ "$DRYRUN" -eq 0 ]; then
+    mkdir -p "$(dirname "$dst")"
+    ln -s "$src" "$dst"
+  fi
+  report link "$dst -> $src"
 }
 
 # 既存ファイルがある場合はコピーせず、手動マージを促す
@@ -56,18 +99,16 @@ copy_if_absent() {
   local src="$1" dst="$2"
   if [ -e "$dst" ]; then
     if [ "$DRYRUN" -eq 0 ]; then
-      echo "skip:   ${dst}（既存のため変更なし）"
+      report skip "${dst}（既存のため変更なし）"
       notice "$dst は既存のため変更していません。取り込みたい設定があれば差分を確認してマージしてください: diff \"$dst\" \"$src\""
     fi
     return 0
   fi
-  if [ "$DRYRUN" -eq 1 ]; then
-    plan "copy:   $dst"
-    return 0
+  if [ "$DRYRUN" -eq 0 ]; then
+    mkdir -p "$(dirname "$dst")"
+    cp "$src" "$dst"
   fi
-  mkdir -p "$(dirname "$dst")"
-  cp "$src" "$dst"
-  echo "copy:   $dst"
+  report copy "$dst"
 }
 
 # shared/skills/ 配下の全スキルを指定ディレクトリへ symlink する
@@ -98,25 +139,20 @@ restore_backup() {
   local dst="$1" newest
   newest="$(ls -1d "$dst".bak.* 2>/dev/null | sort | tail -n 1 || true)"
   [ -n "$newest" ] || return 0
-  if [ "$DRYRUN" -eq 1 ]; then
-    plan "restore: $dst <- $(basename "$newest")"
-    return 0
+  if [ "$DRYRUN" -eq 0 ]; then
+    mv "$newest" "$dst"
   fi
-  mv "$newest" "$dst"
-  echo "restore: $dst <- $(basename "$newest")"
+  report restore "$dst <- $(basename "$newest")"
 }
 
 # 管理対象の symlink を取り除き、バックアップがあれば復元する
 remove_managed_link() {
   local dst="$1"
   managed_target "$dst" || return 0
-  if [ "$DRYRUN" -eq 1 ]; then
-    plan "remove: ${dst}（symlink を除去）"
-    restore_backup "$dst"
-    return 0
+  if [ "$DRYRUN" -eq 0 ]; then
+    rm "$dst"
   fi
-  rm "$dst"
-  echo "remove: $dst"
+  report remove "${dst}（symlink を除去）"
   restore_backup "$dst"
 }
 
@@ -131,12 +167,10 @@ prune_skills_root() {
     { [ -e "$l" ] || [ -L "$l" ]; } || continue
     managed_target "$l" || continue
     if [ "$mode" = "all" ] || [ ! -e "$l" ]; then
-      if [ "$DRYRUN" -eq 1 ]; then
-        plan "prune:  $l"
-      else
+      if [ "$DRYRUN" -eq 0 ]; then
         rm "$l"
-        echo "prune:  $l"
       fi
+      report prune "$l"
     fi
   done
   if [ "$DRYRUN" -eq 0 ]; then
@@ -214,12 +248,12 @@ write_managed_block() {
   # 旧方式（symlink）からの移行: リンクを外し、バックアップがあれば土台として復元
   if managed_target "$dst"; then
     if [ "$DRYRUN" -eq 1 ]; then
-      plan "migrate: ${dst}（symlink を実ファイル化。バックアップがあれば内容を引き継ぐ）"
-      plan "update:  ${dst}（管理ブロックを書き込み）"
+      report migrate "${dst}（symlink を実ファイル化。バックアップがあれば内容を引き継ぐ）"
+      report update "${dst}（管理ブロックを書き込み）"
       return 0
     fi
     rm "$dst"
-    echo "remove: ${dst}（旧方式の symlink）"
+    report remove "${dst}（旧方式の symlink）"
     restore_backup "$dst"
   fi
 
@@ -227,27 +261,21 @@ write_managed_block() {
     if block_is_current "$src" "$dst"; then
       return 0  # 変更なし
     fi
-    if [ "$DRYRUN" -eq 1 ]; then
-      plan "update: ${dst}（管理ブロックを更新。ブロック外は保持）"
-      return 0
+    if [ "$DRYRUN" -eq 0 ]; then
+      replace_block "$src" "$dst"
     fi
-    replace_block "$src" "$dst"
-    echo "update: ${dst}（管理ブロックを更新）"
+    report update "${dst}（管理ブロックを更新。ブロック外は保持）"
   elif [ -e "$dst" ]; then
-    if [ "$DRYRUN" -eq 1 ]; then
-      plan "append: ${dst}（末尾に管理ブロックを追記。既存の内容は保持）"
-      return 0
+    if [ "$DRYRUN" -eq 0 ]; then
+      append_block "$src" "$dst"
     fi
-    append_block "$src" "$dst"
-    echo "append: ${dst}（管理ブロックを追記）"
+    report append "${dst}（末尾に管理ブロックを追記。既存の内容は保持）"
   else
-    if [ "$DRYRUN" -eq 1 ]; then
-      plan "create: ${dst}（管理ブロックを書き込み）"
-      return 0
+    if [ "$DRYRUN" -eq 0 ]; then
+      mkdir -p "$(dirname "$dst")"
+      append_block "$src" "$dst"
     fi
-    mkdir -p "$(dirname "$dst")"
-    append_block "$src" "$dst"
-    echo "create: $dst"
+    report create "${dst}（管理ブロックを書き込み）"
   fi
 }
 
@@ -256,31 +284,26 @@ write_managed_block() {
 remove_block() {
   local dst="$1" tmp
   has_block "$dst" || return 0
-  if [ "$DRYRUN" -eq 1 ]; then
-    if remainder_is_empty "$dst"; then
-      plan "delete: ${dst}（管理ブロックのみのファイルのため削除）"
-      restore_backup "$dst"
-    else
-      plan "update: ${dst}（管理ブロックを除去。それ以外の内容は保持）"
-    fi
-    return 0
-  fi
   if remainder_is_empty "$dst"; then
-    rm "$dst"
-    echo "delete: $dst"
+    if [ "$DRYRUN" -eq 0 ]; then
+      rm "$dst"
+    fi
+    report delete "${dst}（管理ブロックのみのファイルのため削除）"
     restore_backup "$dst"
     return 0
   fi
-  tmp="$(mktemp)"
-  LC_ALL=C awk -v begin="$BLOCK_BEGIN" -v end="$BLOCK_END" '
-    $0 == begin { skip = 1; next }
-    $0 == end   { skip = 0; next }
-    skip        { next }
-    { print }
-  ' "$dst" > "$tmp"
-  cat "$tmp" > "$dst"
-  rm "$tmp"
-  echo "update: ${dst}（管理ブロックを除去）"
+  if [ "$DRYRUN" -eq 0 ]; then
+    tmp="$(mktemp)"
+    LC_ALL=C awk -v begin="$BLOCK_BEGIN" -v end="$BLOCK_END" '
+      $0 == begin { skip = 1; next }
+      $0 == end   { skip = 0; next }
+      skip        { next }
+      { print }
+    ' "$dst" > "$tmp"
+    cat "$tmp" > "$dst"
+    rm "$tmp"
+  fi
+  report update "${dst}（管理ブロックを除去。それ以外の内容は保持）"
 }
 
 # ---------------------------------------------------------------
@@ -291,21 +314,16 @@ remove_block() {
 print_summary() {
   local title="$1" i n
   echo
-  echo "================================================================"
-  echo " $title"
+  ui_ok "$title"
   if [ "${#NOTICES[@]}" -gt 0 ]; then
     echo
-    echo " ⚠ 手動での対応・確認が必要な項目:"
+    ui_warn "手動での対応・確認が必要な項目:"
     i=1
     for n in "${NOTICES[@]}"; do
-      printf '   %d. %s\n' "$i" "$n"
+      printf '  %d. %s\n' "$i" "$n"
       i=$((i + 1))
     done
-  else
-    echo
-    echo " 手動対応が必要な項目はありません。"
   fi
-  echo "================================================================"
 }
 
 # 2段階実行: dry-run でプランを表示 → 確認 → 本実行
@@ -323,14 +341,14 @@ run_with_confirmation() {
   fi
 
   echo
-  echo "適用される変更:"
+  ui_header "適用される変更"
   for p in "${PLAN[@]}"; do
-    echo "  - $p"
+    ui_action "${p%%"$TAB"*}" "${p#*"$TAB"}"
   done
   echo
 
   if [ "$dry_only" -eq 1 ]; then
-    echo "(--dry-run のため適用しません)"
+    ui_dim "(--dry-run のため適用しません)"
     return 0
   fi
 

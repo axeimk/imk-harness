@@ -64,8 +64,9 @@ shared/skills/*/ （スキル実体）
 - **2 段階実行**（ADR-0005): install/uninstall は同一の `apply_changes()` を
   `DRYRUN=1`（プラン収集のみ・FS 無変更）→ 確認 → `DRYRUN=0`（本実行）の 2 回実行する。
   **ファイルを変更する処理は必ず `lib.sh` のヘルパー経由で書く**（直接 rm/cp/ln を
-  スクリプトに書くと dry-run とプラン表示が壊れる）。新しい変更系ヘルパーには
-  DRYRUN 分岐（`plan "..."` / 実行）を必ず実装する
+  スクリプトに書くと dry-run とプラン表示が壊れる）。新しい変更系ヘルパーでは
+  実 FS 操作を `[ "$DRYRUN" -eq 0 ]` で囲み、表示は `report <動詞> <詳細>` 経由にする
+  （report が DRYRUN 中はプランに積み、本実行中は色付きで表示する。色は TTY のみ）
 - **共有スキルの規約**（ADR-0009): `shared/skills/` のスキルは 3 ツールが同一ファイルを
   読むため「どのツールで読まれても本文が成立する」ように書く。Claude Code 専用の
   `` !`cmd` `` 注入や `$ARGUMENTS` は禁止。Codex 固有指定は `agents/openai.yaml` に分離。
