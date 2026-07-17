@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./check-shell.sh)",
+      "Bash(./check-skills.sh)",
+      "Bash(./build.sh)",
+      "Bash(./install.sh --tools claude --dry-run)",
+      "Bash(./install.sh --tools claude,codex,cursor --dry-run)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "fp=$(python3 -c 'import json,sys;print(json.load(sys.stdin).get(\"tool_input\",{}).get(\"file_path\",\"\"))'); case \"$fp\" in *.sh) ./check-shell.sh >&2 || exit 2 ;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}
