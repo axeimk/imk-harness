@@ -81,6 +81,39 @@ load helpers
   assert_skills_linked "$HOME/.claude/skills"
 }
 
+@test "changed skill content is reported on reinstall" {
+  install_tools claude
+  local mf="$HOME/.claude/skills/.imk-harness-manifest"
+  [ -f "$mf" ]
+  # 前回記録のハッシュを書き換えて「前回展開時から内容が変わった」状態を作る
+  # （リポジトリの実スキルは変更できないため、記録側を古くする）
+  awk '$1 == "grilling" { print $1, "stale"; next } { print }' "$mf" > "$mf.tmp"
+  mv "$mf.tmp" "$mf"
+
+  run install_tools claude
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"内容が更新されたスキル: grilling"* ]]
+
+  # 記録は現在の内容に更新され、次回は差分なしに戻る
+  run install_tools claude
+  [[ "$output" == *"変更はありません"* ]]
+}
+
+@test "skill update notice is shown once across multiple roots" {
+  install_tools claude,codex
+  local root mf
+  for root in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
+    mf="$root/.imk-harness-manifest"
+    awk '$1 == "grilling" { print $1, "stale"; next } { print }' "$mf" > "$mf.tmp"
+    mv "$mf.tmp" "$mf"
+  done
+
+  run install_tools claude,codex
+  [ "$status" -eq 0 ]
+  # 両ルートで同じ更新を検知しても通知は 1 回
+  [ "$(grep -c "内容が更新されたスキル" <<< "$output")" -eq 1 ]
+}
+
 @test "existing settings.json is never overwritten" {
   mkdir -p "$HOME/.claude"
   echo '{"mine": true}' > "$HOME/.claude/settings.json"

@@ -16,6 +16,15 @@ NOTICES=()
 
 notice() { NOTICES+=("$1"); }
 
+# 同一内容の notice を重複して積まない（複数の skills ルートが同じ更新を検知したとき用）
+notice_once() {
+  local m="$1" n
+  for n in ${NOTICES[@]+"${NOTICES[@]}"}; do
+    if [ "$n" = "$m" ]; then return 0; fi
+  done
+  notice "$m"
+}
+
 # 管理ブロックのマーカー（ASCII のみ — bash 3.2 / macOS sed の多バイト問題を回避）
 BLOCK_BEGIN='<!-- >>> imk-harness:begin >>> -->'
 BLOCK_END='<!-- <<< imk-harness:end <<< -->'
@@ -120,6 +129,43 @@ link_skills() {
   done
 }
 
+# shared/skills/ 全体の内容記録（スキルごとに 1 行 "名前 ハッシュ"）。
+# パスはスキルディレクトリからの相対で刻み、リポジトリを移動しても値が変わらないようにする。
+# 隠しファイル（.DS_Store 等）は対象外
+skills_digest() {
+  local d
+  for d in "$REPO"/shared/skills/*/; do
+    d="${d%/}"
+    printf '%s %s\n' "$(basename "$d")" \
+      "$(cd "$d" && find . -type f ! -name '.*' | LC_ALL=C sort | xargs shasum | shasum | cut -d' ' -f1)"
+  done
+}
+
+# スキル内容の更新検知と記録:
+#   前回展開時の記録（$root/.imk-harness-manifest）と現在の内容を比べ、内容が変わった
+#   スキルを notice で知らせる（symlink 配布のため反映自体は済んでいる。これを知らせないと
+#   スキルだけ更新したとき「変更はありません」で終わり、更新が届いたか分からない）。
+#   link_skills の後に呼ぶこと（本実行時、書き込み先ディレクトリの存在を前提にする）
+record_skills_manifest() {
+  local root="$1" mf="$1/.imk-harness-manifest" current updated
+  current="$(skills_digest)"
+  if [ -f "$mf" ]; then
+    if [ "$(cat "$mf")" = "$current" ]; then
+      return 0
+    fi
+    updated="$(printf '%s\n' "$current" \
+      | LC_ALL=C awk 'NR==FNR { old[$1] = $2; next } ($1 in old) && old[$1] != $2 { print $1 }' "$mf" - \
+      | xargs)"
+    if [ -n "$updated" ]; then
+      notice_once "前回の展開以降に内容が更新されたスキル: ${updated}（symlink 配布のため、変更は既に反映されています）"
+    fi
+  fi
+  if [ "$DRYRUN" -eq 0 ]; then
+    printf '%s\n' "$current" > "$mf"
+  fi
+  report record "${mf}（スキル内容の記録を更新）"
+}
+
 # このハーネスが張った symlink かどうかの判定:
 #   - リンク先が現在のリポジトリ配下 → 管理対象
 #   - リンク切れで、リンク先パスに imk-harness を含む → 管理対象（リポジトリ移動後の残骸）
@@ -173,6 +219,12 @@ prune_skills_root() {
       report prune "$l"
     fi
   done
+  if [ "$mode" = "all" ] && [ -f "$root/.imk-harness-manifest" ]; then
+    if [ "$DRYRUN" -eq 0 ]; then
+      rm "$root/.imk-harness-manifest"
+    fi
+    report prune "$root/.imk-harness-manifest（スキル内容の記録）"
+  fi
   if [ "$DRYRUN" -eq 0 ]; then
     rmdir "$root" 2>/dev/null || true  # 空になったら畳む
   fi

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # imk-harness をホームディレクトリへ展開する。再実行するとアップデートになる:
 #   - CLAUDE.md / AGENTS.md の管理ブロック更新
+#   - スキル内容の更新検知（前回展開時からの差分をサマリで通知。symlink のため反映自体は自動）
 #   - 選択から外したツールの配置物を掃除（バックアップがあれば復元）
 #   - リポジトリから削除されたスキルの宙吊りリンクを掃除
 # 実行前に変更予定の一覧を表示し、確認を取ってから適用する。
@@ -88,12 +89,14 @@ apply_changes() {
     copy_if_absent "$REPO/codex/config.toml" "$HOME/.codex/config.toml"
   fi
 
-  # 2. スキル配置
+  # 2. スキル配置（symlink のため中身の更新は自動反映。更新検知の記録だけを更新する）
   if [ "$USE_CLAUDE" -eq 1 ]; then
     link_skills "$HOME/.claude/skills"
+    record_skills_manifest "$HOME/.claude/skills"
   fi
   if [ "$NEED_AGENTS" -eq 1 ]; then
     link_skills "$HOME/.agents/skills"
+    record_skills_manifest "$HOME/.agents/skills"
   fi
 
   # 3. アップデート時の掃除
