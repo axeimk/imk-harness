@@ -19,3 +19,4 @@
 | [0012](0012-automated-tests-with-bats.md) | 自動テストを bats で導入する（npm devDependency 管理） | 承認済み |
 | [0013](0013-adr-path-in-project-layer.md) | ADR 記録の経路を特化層に常駐させる | 承認済み |
 | [0014](0014-tdd-skill-in-project-layer.md) | TDD 手順を特化層の tdd スキルとして提供する | 承認済み |
+| [0015](0015-workflow-rules-in-project-layer.md) | 作業の進め方は特化層が定める | 承認済み |

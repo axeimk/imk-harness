@@ -14,6 +14,7 @@ description: プロジェクト特化層（CLAUDE.md / AGENTS.md、verify スキ
    - `HARNESS.md`（採否の記録）があるか。旧規約の記録（CLAUDE.md / AGENTS.md の「ハーネス」節）が残っていないかも確認する
    - `CLAUDE.md` があるか（Claude Code を使う場合）
    - `AGENTS.md` があるか（Codex / Cursor を使う場合）
+   - CLAUDE.md / AGENTS.md に「作業の進め方」節（検証・報告の運用ルール）があるか
    - verify スキルがあるか（Claude Code: `.claude/skills/verify/SKILL.md`、Codex / Cursor: `.agents/skills/verify/SKILL.md`）
    - tdd スキルがあるか（配置は verify スキルと同じ規約）
    - `CONTEXT.md`（プロジェクト用語集）があるか
@@ -21,6 +22,7 @@ description: プロジェクト特化層（CLAUDE.md / AGENTS.md、verify スキ
    - プロジェクト固有 permissions / hooks があるか（Claude Code: `.claude/settings.json`、Codex: `config.toml`、Cursor: `.cursor/`）
 3. **欠けているものを項目ごとに提示し、要る / 要らないをユーザーに選ばせる。** 勝手に全部作らない。`HARNESS.md` に「使わない」と記録済みの項目は一覧に載せない（ユーザーが明示的に見直しを求めたときを除く）。
 4. **CLAUDE.md / AGENTS.md の作成**: `templates/CLAUDE.md.template` を土台に、リポジトリを調査して埋める（ビルド・テストコマンドは package.json / Makefile / pyproject.toml 等から実際に確認する。推測で書かない）。ファイル名は使用ツールに合わせる。両方必要な場合は AGENTS.md（ツール非依存側）を実体にし、CLAUDE.md をそこへの symlink にする（コピーを 2 つ置くと乖離する）。差分が必要になったときだけ実ファイルに分ける。
+   テンプレートの「作業の進め方」節はデフォルト案であり、そのまま貼らずプロジェクトの実態と他項目の採否に合わせて調整する（例: verify スキルを使わないなら該当項目を「既知の方法で動作確認する」に書き換える。hooks で lint を強制しているなら手動実行の指示は省く）。既存の CLAUDE.md / AGENTS.md にこの節が無い場合は追記を提案する（作業の進め方は汎用層では定めないため、この節が無いとエージェントごとの振る舞いが揃わない）。
 5. **verify スキルの作成**: `templates/verify-SKILL.md.template` を土台に、そのプロジェクトを実際にビルド・起動・操作して変更を確認するためのレシピ（起動コマンド、確認すべき代表フロー、落とし穴）を記載する。テスト・lint・ビルドのコマンド一覧は CLAUDE.md / AGENTS.md の「コマンド」節に置き、ここには重複させない。
    - 配置は使用ツールに合わせる（Claude Code: `.claude/skills/verify/`、Codex / Cursor: `.agents/skills/verify/`）。両方必要な場合は `.agents/skills/verify/` に実体を置き、`.claude/skills/verify` → `../../.agents/skills/verify` の symlink を張る（`.agents` がツール非依存の場所。コピーを 2 つ置くと乖離する）
    - description はテンプレートのままにせず、プロジェクト名と対象（何を変更したときに使うか）を入れて具体化する
