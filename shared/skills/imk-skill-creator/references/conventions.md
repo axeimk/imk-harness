@@ -70,10 +70,10 @@ policy:
 
 ## 6. 配置場所の目安
 
-| 層 | Claude Code | Codex | Cursor |
+| スコープ | Claude Code | Codex | Cursor |
 |---|---|---|---|
-| ユーザー層 | `~/.claude/skills/` | `~/.codex/skills/`（`~/.agents/skills/` も可） | `~/.agents/skills/` |
-| プロジェクト層 | `.claude/skills/` | `.agents/skills/` | `.agents/skills/` |
+| ユーザースコープ | `~/.claude/skills/` | `~/.codex/skills/`（`~/.agents/skills/` も可） | `~/.agents/skills/` |
+| プロジェクトスコープ | `.claude/skills/` | `.agents/skills/` | `.agents/skills/` |
 
 ツールのバージョンによって探索場所は変わりうるので、確信が持てない場合は
 対象ツールのドキュメントで確認する。
@@ -81,16 +81,16 @@ policy:
 複数ツールで同じスキルを使う場合、スキルディレクトリの実体は 1 箇所に置き、
 他の探索場所からは symlink を張る（コピーを複数置くと乖離する）。実体の置き場所:
 
-- **プロジェクト層**: `.agents/skills/<name>/` に実体を置き、Claude Code 用には
+- **プロジェクトスコープ**: `.agents/skills/<name>/` に実体を置き、Claude Code 用には
   `.claude/skills/<name>` → `../../.agents/skills/<name>` の symlink を張る。
   `.agents` は Codex / Cursor がネイティブに読むツール非依存の場所で、
   Claude Code も対応が見込まれているため、対応後は symlink を消すだけで一本化できる
   （逆向きに置くと将来実体の引っ越しが要る）。単一ツールのプロジェクトでは
   そのツールのネイティブ位置に直接実体を置き、symlink は張らない
-- **ユーザー層**: 原本リポジトリで管理しているならその原本ディレクトリが実体で、
+- **ユーザースコープ**: 原本リポジトリで管理しているならその原本ディレクトリが実体で、
   リポジトリの展開スクリプトが各ツールの探索場所へ symlink する。原本に新しい
   スキルを書いた後、展開手順を再実行しないと symlink が張られない点に注意する。
-  リポジトリが無ければプロジェクト層と同じ理由で `~/.agents/skills/` を実体にする
+  リポジトリが無ければプロジェクトスコープと同じ理由で `~/.agents/skills/` を実体にする
 
 ## 7. 展開先で解決できない参照を書かない
 
