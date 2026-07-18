@@ -9,7 +9,7 @@ description: プロジェクトスコープのハーネス（CLAUDE.md / AGENTS.
 
 ## 手順
 
-1. **使用ツールの確認**: このプロジェクトで使うコーディングエージェント（Claude Code / Codex / Cursor）をユーザーに確認する。既存ファイルの有無から推測しない（CLAUDE.md しか無いプロジェクトでこれから Codex を使い始めることもある）。`HARNESS.md` に記録済みならそれに従い、再確認しない。回答は手順 10 で `HARNESS.md` に記録する。以降の手順の要否と配置場所はこの選択で決まる。
+1. **使用ツールの確認**: このプロジェクトで使うコーディングエージェント（Claude Code / Codex / Cursor）をユーザーに確認する。既存ファイルの有無から推測しない（CLAUDE.md しか無いプロジェクトでこれから Codex を使い始めることもある）。`HARNESS.md` に記録済みならそれに従い、再確認しない。回答は手順 11 で `HARNESS.md` に記録する。以降の手順の要否と配置場所はこの選択で決まる。
 2. **現状確認**（プロジェクトルートで）
    - `HARNESS.md`（採否の記録）があるか。旧規約の記録（CLAUDE.md / AGENTS.md の「ハーネス」節）が残っていないかも確認する
    - `CLAUDE.md` があるか（Claude Code を使う場合）
@@ -17,6 +17,7 @@ description: プロジェクトスコープのハーネス（CLAUDE.md / AGENTS.
    - CLAUDE.md / AGENTS.md に「作業の進め方」節（検証・報告の運用ルール）があるか
    - verify スキルがあるか（Claude Code: `.claude/skills/verify/SKILL.md`、Codex / Cursor: `.agents/skills/verify/SKILL.md`）
    - tdd スキルがあるか（配置は verify スキルと同じ規約）
+   - domain-modeling / grilling スキルがあるか（配置は verify スキルと同じ規約）
    - `CONTEXT.md`（プロジェクト用語集）があるか
    - ADR 置き場（`docs/adr/` など設計記録のディレクトリ）があるか
    - プロジェクト固有 permissions / hooks があるか（Claude Code: `.claude/settings.json`、Codex: `config.toml`、Cursor: `.cursor/`）
@@ -28,15 +29,18 @@ description: プロジェクトスコープのハーネス（CLAUDE.md / AGENTS.
    - description はテンプレートのままにせず、プロジェクト名と対象（何を変更したときに使うか）を入れて具体化する
    - 作成後、imk-skill-creator スキル（あれば）に同梱の `scripts/validate-skill.sh` で検査し、レシピどおりに一度起動して動くことを確認する
 6. **tdd スキルの作成**（選ばれた場合）: `templates/tdd-SKILL.md.template` を土台に、テスト駆動で実装を進めるためのプロジェクト固有レシピ（テストの置き場所・命名、単一テストの実行コマンド、Red → Green → Refactor の回し方、プロジェクトの流儀）を記載する。単一テストの実行コマンドは実際に動かして確認する（推測で書かない）。配置と symlink の規約、description の具体化、作成後の検査は verify スキル（手順 5）と同じ。あわせて CLAUDE.md / AGENTS.md に「実装は TDD で進める。手順は tdd スキルに従う」のトリガーを 1〜2 行で追記する（サイクルの詳細は常駐指示に書かず、スキル側が持つ）。テストコマンドがまだ無いプロジェクトでは、先にテスト基盤の整備を提案してから導入する。
-7. **CONTEXT.md の作成**（選ばれた場合）: domain-modeling スキル（あれば）の手順とテンプレートに従う。その時点で確立している用語だけを書き、リポジトリを走査した一括収集はしない。確立した用語がまだ無いプロジェクトでは「最初の用語が確定したときに作る」で足りるので、無理に作らない。
-8. **ADR（設計記録）の導入**（選ばれた場合）: `templates/adr-README.md.template` から `docs/adr/README.md` を作成し、CLAUDE.md / AGENTS.md に「設計記録」節を追記する。節はトリガーだけを持たせ、2 行以内に収める（例: 「設計上の決定は `docs/adr/` に記録する。基準と形式は `docs/adr/README.md` に従う」）。記録する基準・形式・運用の詳細は README 側が持つので、常駐指示には書かない。**最初の ADR はここでは書かない** — 記録すべき決定が出た時点で、README を手本にどのエージェントでも書ける。既存の ADR 置き場・形式があるプロジェクトではそれを尊重し、README の配置は規約が明文化されていない場合の提案にとどめる。
-9. **lint / test hooks の提案**（任意）: 編集後の lint など機械的に強制したい検査があれば、使用ツールごとの hooks 設定を提案する（Claude Code: `.claude/settings.json`、Codex: `hooks.json` または `config.toml` の `[hooks]`、Cursor: `.cursor/hooks.json`）。テストスイート全実行のような重い処理は hooks に入れない。
-10. **採否の記録**: 使用ツール（手順 1）と、「要らない」と選ばれた項目をプロジェクトルートの `HARNESS.md` に記録し、以後どのエージェントも再確認・再提案しないようにする（例: `- verify スキル: 使わない（2026-07-12 ユーザー判断）`）。ファイルが無ければ `templates/HARNESS.md.template` を土台に作る。
+7. **domain-modeling / grilling スキルの導入**（選ばれた場合）: 同梱の `templates/domain-modeling/`・`templates/grilling/` をプロジェクトのスキル置き場へ複製する（`SKILL.md.template` は `SKILL.md` に改名し、LICENSE・`templates/` もそのまま含める）。配置と symlink の規約、作成後の検査は verify スキル（手順 5）と同じ。中身は汎用のデフォルト案なのでそのまま置いてよいが、プロジェクトの流儀（既存の用語集・設計記録の規約）に合わせて調整・育成してよい。
+   - domain-modeling は CONTEXT.md（手順 8）と ADR（手順 9）の運用を能動的に支えるスキル。どちらも使わないプロジェクトでは導入の意味が薄い
+   - grilling は単体で成立する（domain-modeling が無い場合は記録部分が省かれるだけ）
+8. **CONTEXT.md の作成**（選ばれた場合）: domain-modeling スキル（導入した場合）の手順とテンプレートに従う。導入しない場合は同梱の `templates/domain-modeling/templates/CONTEXT.md.template` を土台にする。その時点で確立している用語だけを書き、リポジトリを走査した一括収集はしない。確立した用語がまだ無いプロジェクトでは「最初の用語が確定したときに作る」で足りるので、無理に作らない。採用したら CLAUDE.md / AGENTS.md に「`CONTEXT.md`（用語集）の語彙で会話・命名する」の 1 行を追記する。
+9. **ADR（設計記録）の導入**（選ばれた場合）: `templates/adr-README.md.template` から `docs/adr/README.md` を作成し、CLAUDE.md / AGENTS.md に「設計記録」節を追記する。節はトリガーだけを持たせ、2 行以内に収める（例: 「設計上の決定は `docs/adr/` に記録する。基準と形式は `docs/adr/README.md` に従う」）。記録する基準・形式・運用の詳細は README 側が持つので、常駐指示には書かない。**最初の ADR はここでは書かない** — 記録すべき決定が出た時点で、README を手本にどのエージェントでも書ける。既存の ADR 置き場・形式があるプロジェクトではそれを尊重し、README の配置は規約が明文化されていない場合の提案にとどめる。
+10. **lint / test hooks の提案**（任意）: 編集後の lint など機械的に強制したい検査があれば、使用ツールごとの hooks 設定を提案する（Claude Code: `.claude/settings.json`、Codex: `hooks.json` または `config.toml` の `[hooks]`、Cursor: `.cursor/hooks.json`）。テストスイート全実行のような重い処理は hooks に入れない。
+11. **採否の記録**: 使用ツール（手順 1）と、「要らない」と選ばれた項目をプロジェクトルートの `HARNESS.md` に記録し、以後どのエージェントも再確認・再提案しないようにする（例: `- verify スキル: 使わない（2026-07-12 ユーザー判断）`）。ファイルが無ければ `templates/HARNESS.md.template` を土台に作る。
 
 ## 注意
 
 - このスキルが提案する規約はデフォルトの提供であり、強制ではない。ユーザーの「要らない」は記録して尊重する。
 - 旧規約では採否を CLAUDE.md / AGENTS.md の「ハーネス」節に記録していた。この節を見つけたら、記録を `HARNESS.md` へ移して節を削除する移行を提案する（勝手に移さない。移行するまでは節の記録も尊重する）。
 - 既存ファイルがある場合は上書きせず、不足しているセクションの追記を提案する。
-- プロジェクト固有の知識のみを書く。汎用的なルール（応答スタイル等）はユーザースコープの CLAUDE.md に既にあるので重複させない。
+- プロジェクトに関する知識のみを書く。応答スタイル等のユーザー個人の好みはユーザースコープ（ホーム側の CLAUDE.md / AGENTS.md）に属するので書かない。
 - Claude Code にはビルトインの verify スキル（変更を実行時観察で検証する汎用手順）があり、プロジェクトに verify スキルが無ければ自らブートストラップする。ここで作る verify スキルはそれと競合せず、ビルトイン verify が起動手段を探す段階で参照するプロジェクト固有レシピとして機能する（Codex / Cursor ではそのまま手順書として使う）。中身をテストコマンドの羅列にしないこと — ビルトイン verify は「テスト実行は検証ではない」という前提で動く。

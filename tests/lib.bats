@@ -43,7 +43,7 @@ load helpers
 }
 
 @test "managed_target accepts only symlinks pointing into the repo" {
-  ln -s "$REPO/shared/skills/grilling" "$HOME/managed"
+  ln -s "$REPO/shared/skills/harness-check" "$HOME/managed"
   managed_target "$HOME/managed"
 
   ln -s /usr/bin "$HOME/unmanaged"
@@ -54,7 +54,7 @@ load helpers
 }
 
 @test "managed_target accepts dangling links left after a repo move" {
-  ln -s /nonexistent/old-path/imk-harness/shared/skills/grilling "$HOME/dangling"
+  ln -s /nonexistent/old-path/imk-harness/shared/skills/harness-check "$HOME/dangling"
   managed_target "$HOME/dangling"
 
   ln -s /nonexistent/other-tool/skills/foo "$HOME/dangling-other"

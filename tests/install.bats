@@ -87,12 +87,12 @@ load helpers
   [ -f "$mf" ]
   # 前回記録のハッシュを書き換えて「前回展開時から内容が変わった」状態を作る
   # （リポジトリの実スキルは変更できないため、記録側を古くする）
-  awk '$1 == "grilling" { print $1, "stale"; next } { print }' "$mf" > "$mf.tmp"
+  awk '$1 == "harness-check" { print $1, "stale"; next } { print }' "$mf" > "$mf.tmp"
   mv "$mf.tmp" "$mf"
 
   run install_tools claude
   [ "$status" -eq 0 ]
-  [[ "$output" == *"内容が更新されたスキル: grilling"* ]]
+  [[ "$output" == *"内容が更新されたスキル: harness-check"* ]]
 
   # 記録は現在の内容に更新され、次回は差分なしに戻る
   run install_tools claude
@@ -104,7 +104,7 @@ load helpers
   local root mf
   for root in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
     mf="$root/.imk-harness-manifest"
-    awk '$1 == "grilling" { print $1, "stale"; next } { print }' "$mf" > "$mf.tmp"
+    awk '$1 == "harness-check" { print $1, "stale"; next } { print }' "$mf" > "$mf.tmp"
     mv "$mf.tmp" "$mf"
   done
 
