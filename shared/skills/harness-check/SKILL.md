@@ -43,7 +43,7 @@ description: プロジェクトスコープのハーネス（CLAUDE.md / AGENTS.
    - grilling は単体で成立する（domain-modeling が無い場合は記録部分が省かれるだけ）
 8. **CONTEXT.md の作成**（選ばれた場合）: domain-modeling スキル（導入した場合）の手順とテンプレートに従う。導入しない場合は同梱の `templates/domain-modeling/templates/CONTEXT.md.template` を土台にする。その時点で確立している用語だけを書き、リポジトリを走査した一括収集はしない。確立した用語がまだ無いプロジェクトでは「最初の用語が確定したときに作る」で足りるので、無理に作らない。採用したら CLAUDE.md / AGENTS.md に「`CONTEXT.md`（用語集）の語彙で会話・命名する」の 1 行を追記する。
 9. **ADR（設計記録）の導入**（選ばれた場合）: `templates/adr-README.md.template` から `docs/adr/README.md` を作成し、CLAUDE.md / AGENTS.md に「設計記録」節を追記する。節はトリガーだけを持たせ、2 行以内に収める（例: 「設計上の決定は `docs/adr/` に記録する。基準と形式は `docs/adr/README.md` に従う」）。記録する基準・形式・運用の詳細は README 側が持つので、常駐指示には書かない。**最初の ADR はここでは書かない** — 記録すべき決定が出た時点で、README を手本にどのエージェントでも書ける。既存の ADR 置き場・形式があるプロジェクトではそれを尊重し、README の配置は規約が明文化されていない場合の提案にとどめる。
-10. **permissions / hooks の提案**（任意）: 頻用コマンドの許可リスト（permissions）や、編集後の lint など機械的に強制したい検査（hooks）があれば、使用ツールごとの設定を提案する（permissions — Claude Code: `.claude/settings.json`、Codex: `config.toml`、Cursor: `.cursor/`。hooks — Claude Code: `.claude/settings.json`、Codex: `hooks.json` または `config.toml` の `[hooks]`、Cursor: `.cursor/hooks.json`）。テストスイート全実行のような重い処理は hooks に入れない。
+10. **permissions / hooks の提案**（任意）: 頻用コマンドの許可リスト（permissions）や、編集後の lint など機械的に強制したい検査（hooks）があれば、使用ツールごとの設定を提案する（permissions — Claude Code: `.claude/settings.json`、Codex: `config.toml`、Cursor: `.cursor/`）。hooks の作成は imk-hooks-creator スキルに従う — ツールごとにイベント名・設定ファイルの構造・入出力スキーマが異なり、参照資料なしで書くと一部ツール分が書けない・別ツールの書式が混入する。スキルが無い環境では各ツールの公式ドキュメントで仕様を確認してから書く（学習知識の推測で書かない）。テストスイート全実行のような重い処理は hooks に入れない。
 11. **採否の記録**: 使用ツール（手順 1）と、「要らない」と選ばれた項目をプロジェクトルートの `HARNESS.md` に記録し、以後どのエージェントも再確認・再提案しないようにする（例: `- verify スキル: 使わない（2026-07-12 ユーザー判断）`）。ファイルが無ければ `templates/HARNESS.md.template` を土台に作る。
 
 ## 注意

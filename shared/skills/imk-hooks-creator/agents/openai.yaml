@@ -1,0 +1,4 @@
+interface:
+  display_name: "IMK Hooks Creator"
+  short_description: "Claude Code / Codex / Cursor の hooks を作成・修正する"
+  default_prompt: "$imk-hooks-creator を使って、このプロジェクトに hooks を追加する。"

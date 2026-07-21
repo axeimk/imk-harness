@@ -20,4 +20,5 @@
 | [0013](0013-adr-path-in-project-layer.md) | ADR 記録の経路を特化層に常駐させる | 承認済み |
 | [0014](0014-tdd-skill-in-project-layer.md) | TDD 手順を特化層の tdd スキルとして提供する | 承認済み |
 | [0015](0015-workflow-rules-in-project-layer.md) | 作業の進め方はプロジェクトスコープが定める | 承認済み |
-| [0016](0016-harness-growing-mission.md) | ミッションを「プロジェクトスコープのハーネス育成」に特化する | 承認済み |
+| [0016](0016-harness-growing-mission.md) | ミッションを「プロジェクトスコープのハーネス育成」に特化する | 承認済み（ADR-0017 により一部改訂） |
+| [0017](0017-hooks-creator-skill.md) | hooks 作成支援を 3 本目の共有スキルとして追加する | 承認済み |
