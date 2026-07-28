@@ -1,0 +1,4 @@
+interface:
+  display_name: "IMK Subagent Creator"
+  short_description: "Claude Code / Codex / Cursor のサブエージェント定義を作る"
+  default_prompt: "$imk-subagent-creator を使って、このプロジェクトにカスタムサブエージェントを追加する。"

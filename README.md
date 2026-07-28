@@ -12,14 +12,16 @@ Claude Code / Codex / Cursor 用の、**プロジェクトスコープのハー�
 | 設計判断とその経緯 | [docs/adr/](docs/adr/README.md) |
 | 3 ツールの Skills 仕様の調査資料 | [docs/skills-spec/](docs/skills-spec/README.md) |
 | 3 ツールの hooks 仕様の調査記録 | [docs/hooks-spec/](docs/hooks-spec/README.md) |
+| 3 ツールの Subagents 仕様の調査記録 | [docs/subagents-spec/](docs/subagents-spec/README.md) |
 | 用語集 | [CONTEXT.md](CONTEXT.md) |
 
 ## 考え方
 
 **このリポジトリの本質は「各プロジェクトのプロジェクトスコープを育てるためのハーネス」である。**
 持ち物はそのための装置だけ — 整備を実行する harness-check スキル、スキルを作る
-imk-skill-creator スキル、hooks を作る imk-hooks-creator スキル、そしてユーザー自身の
-常駐指示を 3 ツールへ一元配布する仕組み。
+imk-skill-creator スキル、hooks を作る imk-hooks-creator スキル、サブエージェント定義を
+作る imk-subagent-creator スキル、そしてユーザー自身の常駐指示を 3 ツールへ
+一元配布する仕組み。
 プロジェクトスコープの育て方の規約は常駐指示ではなく、harness-check の手順と
 テンプレートに埋め込まれている。
 

@@ -7,10 +7,10 @@
 
 Claude Code / Codex / Cursor 用の、**プロジェクトスコープのハーネスを育てることに特化した
 汎用ハーネス**。ホームディレクトリ（`~/.claude/` `~/.codex/` `~/.agents/`）へ展開して使う。
-実体は次の 3 つだけ（ADR-0001, ADR-0016, ADR-0017）:
+実体は次の 3 つだけ（ADR-0001, ADR-0016, ADR-0018）:
 
-- **スキル 3 本** — harness-check（プロジェクトスコープの整備）、imk-skill-creator（スキル作成）、
-  imk-hooks-creator（hooks 作成）。
+- **スキル 4 本** — harness-check（プロジェクトスコープの整備）、imk-skill-creator（スキル作成）、
+  imk-hooks-creator（hooks 作成）、imk-subagent-creator（サブエージェント定義作成）。
   harness-check のテンプレートとして採用プロジェクトへ複製する
 - **ユーザー常駐指示の配布装置** — `shared/instructions/` はユーザー自身が常駐指示を書く場所で、
   ハーネス提供のデフォルト指示は無い（`00-style.md` はユーザーコンテンツの記入例）
