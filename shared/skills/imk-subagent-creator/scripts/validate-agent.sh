@@ -143,11 +143,18 @@ validate_markdown() {
       ""|worktree) ;;
       *) err "isolation は worktree のみ指定できます" ;;
     esac
+    value="$(unquote "$(yaml_field effort "$fm")")"
+    case "$value" in
+      ""|low|medium|high|xhigh|max) ;;
+      *) err "未対応の effort です: ${value}" ;;
+    esac
   else
     LC_ALL=C grep -Eq '^[[:space:]]*background[[:space:]]*:' <<< "$fm" \
       && err "background は Claude Code のフィールドです。Cursor では is_background を使ってください"
     LC_ALL=C grep -Eq '^[[:space:]]*permissionMode[[:space:]]*:' <<< "$fm" \
       && err "permissionMode は Claude Code のフィールドです。Cursor では readonly と実行モードを使ってください"
+    LC_ALL=C grep -Eq '^[[:space:]]*effort[[:space:]]*:' <<< "$fm" \
+      && err "effort は Claude Code のフィールドです。Cursor ではモデル一覧の model slug を使ってください"
     value="$(unquote "$(yaml_field readonly "$fm")")"
     validate_boolean_yaml readonly "$value"
     value="$(unquote "$(yaml_field is_background "$fm")")"
@@ -156,7 +163,7 @@ validate_markdown() {
 }
 
 validate_codex() {
-  local name desc instructions filename_name
+  local name desc instructions filename_name value
 
   case "$file" in
     *.toml) ;;
@@ -192,6 +199,12 @@ validate_codex() {
     && err "background / is_background は Codex カスタムエージェントの共通フィールドではありません"
   LC_ALL=C grep -Eq '^---[[:space:]]*$' "$file" \
     && err "Codex の定義は YAML frontmatter 付き Markdown ではなく TOML です"
+
+  value="$(unquote "$(toml_field model_reasoning_effort "$file")")"
+  case "$value" in
+    ""|low|medium|high|xhigh|max|ultra) ;;
+    *) err "未対応の model_reasoning_effort です: ${value}" ;;
+  esac
 }
 
 case "$tool" in

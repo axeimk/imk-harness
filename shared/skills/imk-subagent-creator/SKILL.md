@@ -15,6 +15,7 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 - Claude Code → `references/claude-code.md`
 - Codex → `references/codex.md`
 - Cursor → `references/cursor.md`
+- `最高` / `高` / `中` / `低`のモデル階層を使う → `references/model-levels.md`
 
 ## 手順
 
@@ -28,7 +29,7 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 - 対象ツール（Claude Code / Codex / Cursor）
 - プロジェクト共有か、ユーザー個人用か
 - 読み取り専用か、編集・コマンド実行を許すか
-- 親のモデルを継承するか、特定モデルを使う理由があるか
+- 親のモデルを継承するか、`最高` / `高` / `中` / `低`の階層または特定モデルを使うか
 - 同時実行、バックグラウンド、永続メモリ、MCP、スキル事前読込などが本当に必要か
 
 配置先:
@@ -70,7 +71,19 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 親の会話履歴がそのまま見える前提にしない。毎回変わる対象・入力は親からの委譲メッセージで
 渡させ、定義ファイルには繰り返し使う役割・制約・返却形式だけを書く。
 
-### 4. 対象ツールの形式へ変換する
+### 4. モデルと推論量を選ぶ
+
+ユーザーがモデル階層を指定したら `references/model-levels.md` を読み、対象ツールの
+正規モデル ID と推論量へ変換する。たとえば「最高モデルで」と言われた場合、
+Claude Code / Codex / Cursor で同じ文字列を使わず、対応表の各ツール列を使う。
+
+- モデル指定が無ければ、親モデルと推論量の継承を既定にする
+- 階層と別にモデルまたは推論量が明示されたら、その明示指定を優先する
+- Cursor はモデル一覧の完全な slug を使い、独立した `effort` を書かない
+- モデルが利用できなければ別モデルへ黙って変更せず、利用できない設定と代案を返す
+- 固定後は実行時表示でモデルと推論量を確認する
+
+### 5. 対象ツールの形式へ変換する
 
 対象ツールの参照資料とテンプレートを使う。
 
@@ -88,13 +101,14 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 |---|---|---|---|
 | 指示本文 | Markdown 本文 | `developer_instructions` | Markdown 本文 |
 | 親モデルを継承 | `model: inherit` または省略 | `model` を省略 | `model: inherit` または省略 |
+| 推論量を固定 | `effort` | `model_reasoning_effort` | 対応する `model` slug |
 | 読み取り専用 | `tools` / `disallowedTools` / `permissionMode` | `sandbox_mode = "read-only"` | `readonly: true` |
 | 常時バックグラウンド | `background: true` | 定義ファイルの共通フィールドなし | `is_background: true` |
 
 モデル名・利用可否・推論量は変化しやすい。ユーザーに理由が無ければ継承を既定にし、
 固定する場合は対象ツールの現在のモデル一覧を確認する。秘密情報や認証情報を定義へ書かない。
 
-### 5. 機械検査する
+### 6. 機械検査する
 
 スキルディレクトリを基準に、対象ファイルごとに実行する。
 
@@ -107,7 +121,7 @@ scripts/validate-agent.sh cursor .cursor/agents/<name>.md
 フロントマター / TOML の必須項目、命名、本文、別ツールの代表的なフィールド混入を検査する。
 エラーを直して再実行し、通るまで繰り返す。
 
-### 6. 実地テストする
+### 7. 実地テストする
 
 新しいセッションで次を順に試す。
 

@@ -1,6 +1,6 @@
 # Claude Code カスタムサブエージェント仕様
 
-- 調査日: 2026-07-28
+- 調査日: 2026-07-30
 - 一次情報: https://code.claude.com/docs/en/sub-agents
 
 ## 目次
@@ -65,7 +65,7 @@ model: inherit
 | `hooks` | No | このサブエージェント内だけで動く hooks |
 | `memory` | No | `user` / `project` / `local` の永続メモリ |
 | `background` | No | `true` なら常にバックグラウンド実行 |
-| `effort` | No | モデルが対応する推論量 |
+| `effort` | No | `low` / `medium` / `high` / `xhigh` / `max`。対応範囲はモデル依存 |
 | `isolation` | No | `worktree` で一時 git worktree に隔離 |
 | `color` | No | UI 表示色 |
 | `initialPrompt` | No | `--agent` 等でメインエージェントとして起動した際の初回入力 |
@@ -85,6 +85,14 @@ model: inherit
 
 組織のモデル許可リストに無い指定はスキップされ、継承モデルへフォールバックする。
 固定モデルを要求する場合は、実行時の表示でも確認する。
+
+`effort` はサブエージェント実行中の推論量を固定し、省略時は親セッションから継承する。
+対応しない値はモデル側で下位の値へ調整されることがある。Haiku 4.5 は `effort` に
+対応しないため、`model: claude-haiku-4-5` では `effort` を省略する。
+
+ツール非依存のモデル階層から選ぶ場合は `references/model-levels.md` の Claude Code 列を使う。
+Fable 5 の完全なモデル ID は `claude-fable-5` だが、30 日のデータ保持が必要で
+ZDR 環境では利用できない。
 
 読み取り専用にしたい場合、`tools: Read, Glob, Grep` のような allowlist が明確。
 `Bash` は読み取りコマンドだけに限定できないため、含めるなら hooks や sandbox も検討する。

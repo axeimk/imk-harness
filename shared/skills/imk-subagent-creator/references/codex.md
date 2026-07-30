@@ -1,6 +1,6 @@
 # Codex カスタムエージェント仕様
 
-- 調査日: 2026-07-28
+- 調査日: 2026-07-30
 - 一次情報: https://developers.openai.com/codex/subagents
 
 ## 目次
@@ -69,6 +69,14 @@ developer_instructions = """
 
 モデルだけを変えて推論量が明示されていない場合、そのモデルの既定推論量が使われることがある。
 固定する理由が無ければ両方を省略し、親または全体設定を継承する。
+
+`model_reasoning_effort` は `low` / `medium` / `high` / `xhigh` / `max` を基本とし、
+対応モデルとアカウントでは `ultra` も使える。モデルごとに対応範囲が異なるため、
+実行時の表示でも確認する。
+
+ツール非依存のモデル階層から選ぶ場合は `references/model-levels.md` の Codex 列を使う。
+現行 GPT-5.6 系の正規 ID は、能力優先が `gpt-5.6-sol`、バランス型が
+`gpt-5.6-terra`、速度・コスト優先が `gpt-5.6-luna`。
 
 `sandbox_mode = "read-only"` で読み取り専用の既定を与えられる。省略した
 `sandbox_mode` / MCP / スキル設定は親から継承する。

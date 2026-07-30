@@ -33,6 +33,42 @@ EOF
   [[ "$output" == *"OK: reviewer.md"* ]]
 }
 
+@test "valid claude code model effort passes" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+name: reviewer
+description: Reviews difficult code changes after implementation.
+model: claude-fable-5
+effort: high
+---
+
+Review the requested changes and return evidence-backed findings.
+EOF
+
+  run "$VALIDATOR" claude-code "$HOME/reviewer.md"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OK: reviewer.md"* ]]
+}
+
+@test "claude code agent rejects invalid effort" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+name: reviewer
+description: Reviews difficult code changes after implementation.
+model: claude-fable-5
+effort: ultra
+---
+
+Review the requested changes.
+EOF
+
+  run "$VALIDATOR" claude-code "$HOME/reviewer.md"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"未対応の effort"* ]]
+}
+
 @test "claude code agent requires description" {
   cat > "$HOME/reviewer.md" <<'EOF'
 ---
@@ -65,6 +101,42 @@ EOF
   [[ "$output" == *"is_background"* ]]
 }
 
+@test "valid cursor model slug passes" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+name: reviewer
+description: Reviews difficult code changes.
+model: cursor-grok-4.5-high
+readonly: true
+---
+
+Review the requested changes.
+EOF
+
+  run "$VALIDATOR" cursor "$HOME/reviewer.md"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OK: reviewer.md"* ]]
+}
+
+@test "cursor agent rejects standalone effort" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+name: reviewer
+description: Reviews difficult code changes.
+model: cursor-grok-4.5-high
+effort: high
+---
+
+Review the requested changes.
+EOF
+
+  run "$VALIDATOR" cursor "$HOME/reviewer.md"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"model slug"* ]]
+}
+
 @test "valid codex agent passes" {
   cat > "$HOME/reviewer.toml" <<'EOF'
 name = "reviewer"
@@ -80,6 +152,39 @@ EOF
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"OK: reviewer.toml"* ]]
+}
+
+@test "valid codex model effort passes" {
+  cat > "$HOME/reviewer.toml" <<'EOF'
+name = "reviewer"
+description = "Reviews difficult code changes after implementation."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "max"
+
+developer_instructions = """
+Review the requested changes and return evidence-backed findings.
+"""
+EOF
+
+  run "$VALIDATOR" codex "$HOME/reviewer.toml"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OK: reviewer.toml"* ]]
+}
+
+@test "codex agent rejects invalid model effort" {
+  cat > "$HOME/reviewer.toml" <<'EOF'
+name = "reviewer"
+description = "Reviews difficult code changes after implementation."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "extreme"
+developer_instructions = "Review the requested changes."
+EOF
+
+  run "$VALIDATOR" codex "$HOME/reviewer.toml"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"未対応の model_reasoning_effort"* ]]
 }
 
 @test "codex agent requires developer instructions" {
