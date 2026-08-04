@@ -16,7 +16,8 @@ generate() {
   echo "generated: $out"
 }
 
-mkdir -p claude codex
+mkdir -p claude codex opencode
 generate claude/CLAUDE.md
-# 現状は内容共通。Claude/Codex で差分が必要になったらここで分岐する
+# 現状は内容共通。ツールごとに差分が必要になったらここで分岐する
 generate codex/AGENTS.md
+generate opencode/AGENTS.md

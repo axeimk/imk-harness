@@ -5,8 +5,8 @@
 
 ## このリポジトリは何か
 
-Claude Code / Codex / Cursor 用の、**プロジェクトスコープのハーネスを育てることに特化した
-汎用ハーネス**。ホームディレクトリ（`~/.claude/` `~/.codex/` `~/.agents/`）へ展開して使う。
+Claude Code / Codex / Cursor / OpenCode 用の、**プロジェクトスコープのハーネスを育てることに特化した
+汎用ハーネス**。ホームディレクトリ（`~/.claude/` `~/.codex/` `~/.agents/` `~/.config/opencode/`）へ展開して使う。
 実体は次の 3 つだけ（ADR-0001, ADR-0016, ADR-0018）:
 
 - **スキル 4 本** — harness-check（プロジェクトスコープの整備）、imk-skill-creator（スキル作成）、
@@ -29,7 +29,7 @@ Claude Code / Codex / Cursor 用の、**プロジェクトスコープのハー�
 
 ```sh
 ./build.sh                                # shared/instructions/ から生成物を再生成
-./install.sh --tools claude,codex,cursor  # ホームへ展開（プラン表示 → y/N 確認 → 適用）
+./install.sh --tools claude,codex,cursor,opencode  # ホームへ展開（プラン表示 → y/N 確認 → 適用）
 ./install.sh --tools claude --dry-run     # 変更予定の表示のみ（FS 無変更）
 ./install.sh --tools claude --yes         # 確認スキップ
 ./uninstall.sh [--yes|--dry-run]          # アンインストール
@@ -63,7 +63,7 @@ shared/instructions/*.md（原本）
   → install.sh がホーム側ファイルの「管理ブロック」（マーカー間）に書き込む
 shared/skills/*/ （スキル実体）
   → install.sh が各ツールのネイティブ位置へ symlink
-     （Claude: ~/.claude/skills, Codex/Cursor: ~/.agents/skills — ADR-0003）
+     （Claude: ~/.claude/skills, Codex/Cursor/OpenCode: ~/.agents/skills — ADR-0003）
 ```
 
 - **管理ブロック方式**（ADR-0004): ホーム側の CLAUDE.md / AGENTS.md は実ファイルで、
@@ -75,7 +75,7 @@ shared/skills/*/ （スキル実体）
   スクリプトに書くと dry-run とプラン表示が壊れる）。新しい変更系ヘルパーでは
   実 FS 操作を `[ "$DRYRUN" -eq 0 ]` で囲み、表示は `report <動詞> <詳細>` 経由にする
   （report が DRYRUN 中はプランに積み、本実行中は色付きで表示する。色は TTY のみ）
-- **共有スキルの規約**（ADR-0009): `shared/skills/` のスキルは 3 ツールが同一ファイルを
+- **共有スキルの規約**（ADR-0009): `shared/skills/` のスキルは 4 ツールが同一ファイルを
   読むため「どのツールで読まれても本文が成立する」ように書く。Claude Code 専用の
   `` !`cmd` `` 注入や `$ARGUMENTS` は禁止。Codex 固有指定は `agents/openai.yaml` に分離。
   `./check-skills.sh` で機械検査する（各ツールの仕様調査は `docs/skills-spec/`）

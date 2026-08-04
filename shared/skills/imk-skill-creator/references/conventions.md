@@ -1,6 +1,6 @@
-# 3 ツール互換規約 — どのツールで読まれても本文が成立するように書く
+# 4 ツール互換規約 — どのツールで読まれても本文が成立するように書く
 
-同一の SKILL.md が Claude Code / Codex / Cursor から読まれる前提のスキルが従う規約。
+同一の SKILL.md が Claude Code / Codex / Cursor / OpenCode から読まれる前提のスキルが従う規約。
 各ツールは他ツール向けの拡張をエラーにせず無視するため、この「無視される」性質を
 吸収機構として使う。要約は 1 行: **どのツールで読まれても本文が成立すること**。
 
@@ -16,7 +16,7 @@
 
 ## 2. 禁止 — 本文の意味を変えるツール固有プレースホルダ
 
-Claude Code の動的コンテキスト注入と引数展開は、Codex / Cursor では展開されず
+Claude Code の動的コンテキスト注入と引数展開は、Codex / Cursor / OpenCode では展開されず
 **生テキストのままモデルに渡り、指示文が壊れる**。共有スキルでは使わない:
 
 - `` !`command` `` （インラインの動的コンテキスト注入）
@@ -68,12 +68,17 @@ policy:
 
 片方だけだと一部ツールで自動発火してしまう。validate-skill.sh が整合を検査する。
 
+OpenCode にはスキル側から自動発火を禁じる手段が無い（`disable-model-invocation` は
+無視される）。読み込みを止めたい場合は利用者側の `opencode.json` で
+`permission.skill` に `deny` / `ask` を書くしかないため、その前提で本文を書く
+（「明示起動されたときだけ実行する」といった条件は本文にも明記する）。
+
 ## 6. 配置場所の目安
 
-| スコープ | Claude Code | Codex | Cursor |
-|---|---|---|---|
-| ユーザースコープ | `~/.claude/skills/` | `~/.codex/skills/`（`~/.agents/skills/` も可） | `~/.agents/skills/` |
-| プロジェクトスコープ | `.claude/skills/` | `.agents/skills/` | `.agents/skills/` |
+| スコープ | Claude Code | Codex | Cursor | OpenCode |
+|---|---|---|---|---|
+| ユーザースコープ | `~/.claude/skills/` | `~/.codex/skills/`（`~/.agents/skills/` も可） | `~/.agents/skills/` | `~/.agents/skills/`（`~/.config/opencode/skills/` も可） |
+| プロジェクトスコープ | `.claude/skills/` | `.agents/skills/` | `.agents/skills/` | `.agents/skills/`（`.opencode/skills/` も可） |
 
 ツールのバージョンによって探索場所は変わりうるので、確信が持てない場合は
 対象ツールのドキュメントで確認する。
@@ -83,7 +88,7 @@ policy:
 
 - **プロジェクトスコープ**: `.agents/skills/<name>/` に実体を置き、Claude Code 用には
   `.claude/skills/<name>` → `../../.agents/skills/<name>` の symlink を張る。
-  `.agents` は Codex / Cursor がネイティブに読むツール非依存の場所で、
+  `.agents` は Codex / Cursor / OpenCode がネイティブに読むツール非依存の場所で、
   Claude Code も対応が見込まれているため、対応後は symlink を消すだけで一本化できる
   （逆向きに置くと将来実体の引っ越しが要る）。単一ツールのプロジェクトでは
   そのツールのネイティブ位置に直接実体を置き、symlink は張らない

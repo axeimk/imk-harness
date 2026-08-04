@@ -225,3 +225,136 @@ EOF
   [ "$status" -eq 1 ]
   [[ "$output" == *"sandbox_mode"* ]]
 }
+
+@test "valid opencode agent passes" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+description: Reviews code changes after implementation.
+mode: subagent
+permission:
+  edit: deny
+---
+
+Review the requested changes and return evidence-backed findings.
+EOF
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OK: reviewer.md"* ]]
+}
+
+@test "opencode agent requires description" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+mode: subagent
+---
+
+Review the requested changes.
+EOF
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"description がありません"* ]]
+}
+
+@test "opencode agent rejects cursor readonly field" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+description: Reviews code changes.
+readonly: true
+---
+
+Review the requested changes.
+EOF
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"permission"* ]]
+}
+
+@test "opencode agent rejects invalid mode" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+description: Reviews code changes.
+mode: background
+---
+
+Review the requested changes.
+EOF
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"未対応の mode"* ]]
+}
+
+@test "opencode agent rejects model without provider prefix" {
+  cat > "$HOME/reviewer.md" <<'EOF'
+---
+description: Reviews code changes.
+model: claude-sonnet-4-6
+---
+
+Review the requested changes.
+EOF
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"provider/model-id"* ]]
+}
+
+@test "opencode agent rejects claude effort field" {
+  cat > "$HOME/reviewer.md" <<'INNER'
+---
+description: Reviews code changes.
+model: opencode-go/gpt-5.6-luna
+effort: high
+---
+
+Review the requested changes.
+INNER
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"variant"* ]]
+}
+
+@test "valid opencode model variant passes" {
+  cat > "$HOME/reviewer.md" <<'INNER'
+---
+description: Reviews code changes.
+mode: subagent
+model: opencode-go/kimi-k3
+variant: max
+---
+
+Review the requested changes.
+INNER
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OK: reviewer.md"* ]]
+}
+
+@test "opencode variant without model warns" {
+  cat > "$HOME/reviewer.md" <<'INNER'
+---
+description: Reviews code changes.
+mode: subagent
+variant: max
+---
+
+Review the requested changes.
+INNER
+
+  run "$VALIDATOR" opencode "$HOME/reviewer.md"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"model を指定したときだけ"* ]]
+}

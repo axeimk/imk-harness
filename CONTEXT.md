@@ -5,7 +5,7 @@
 ## 用語
 
 **ユーザースコープ** (`user scope`):
-ホーム側（`~/.claude/` `~/.codex/` `~/.agents/`）に置かれ、全プロジェクトで読み込まれるハーネス資産。このリポジトリが原本を管理し、展開する。
+ホーム側（`~/.claude/` `~/.codex/` `~/.agents/` `~/.config/opencode/`）に置かれ、全プロジェクトで読み込まれるハーネス資産。このリポジトリが原本を管理し、展開する。
 _避ける_: 汎用層、ユーザー層、共通層（旧称。2026-07-19 に改称）
 
 **プロジェクトスコープ** (`project scope`):
@@ -27,7 +27,7 @@ install/uninstall が同一の適用処理を DRYRUN（プラン収集のみ）�
 _避ける_: ドライラン方式（DRYRUN は 2 段階実行の前半を指す別概念）
 
 **共有スキル** (`shared skill`):
-`shared/skills/` に置かれ、symlink で 3 ツール（Claude Code / Codex / Cursor）に配布されるスキル。どのツールで読まれても本文が成立するように書く。
+`shared/skills/` に置かれ、symlink で 4 ツール（Claude Code / Codex / Cursor / OpenCode）に配布されるスキル。どのツールで読まれても本文が成立するように書く。
 
 **HARNESS.md** (`harness record`):
 プロジェクトルートに置く、ハーネス提案の採否を記録するファイル。「使わない」と記録された項目は再提案しない。

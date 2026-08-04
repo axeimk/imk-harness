@@ -5,6 +5,9 @@ setup() {
   REPO="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   FAKE_HOME="$(mktemp -d)"
   export HOME="$FAKE_HOME"
+  # OpenCode の設定パス（${XDG_CONFIG_HOME:-$HOME/.config}/opencode）を
+  # fake HOME 配下に固定する。実環境の XDG_CONFIG_HOME が漏れないようにする
+  unset XDG_CONFIG_HOME
   # lib.sh のヘルパー（extract_block 等）をアサーションに再利用する
   TS="$(date +%Y%m%d%H%M%S)"
   . "$REPO/lib.sh"

@@ -1,7 +1,7 @@
 # imk-harness
 
-Claude Code / Codex / Cursor 用の、**プロジェクトスコープのハーネスを育てることに特化した汎用ハーネス**。
-ホームディレクトリ（`~/.claude/` `~/.codex/` `~/.agents/`）へ展開して使う。
+Claude Code / Codex / Cursor / OpenCode 用の、**プロジェクトスコープのハーネスを育てることに特化した汎用ハーネス**。
+ホームディレクトリ（`~/.claude/` `~/.codex/` `~/.agents/` `~/.config/opencode/`）へ展開して使う。
 
 この README は**ハーネスを導入・運用する人**向け。読みたいこと別の入口:
 
@@ -10,9 +10,9 @@ Claude Code / Codex / Cursor 用の、**プロジェクトスコープのハー�
 | 導入・更新・アンインストールの手順と挙動 | この README |
 | このリポジトリを変更する（開発ガイド・アーキテクチャ・テスト） | [CLAUDE.md](CLAUDE.md)（`AGENTS.md` は同一内容） |
 | 設計判断とその経緯 | [docs/adr/](docs/adr/README.md) |
-| 3 ツールの Skills 仕様の調査資料 | [docs/skills-spec/](docs/skills-spec/README.md) |
-| 3 ツールの hooks 仕様の調査記録 | [docs/hooks-spec/](docs/hooks-spec/README.md) |
-| 3 ツールの Subagents 仕様の調査記録 | [docs/subagents-spec/](docs/subagents-spec/README.md) |
+| 各ツールの Skills 仕様の調査資料 | [docs/skills-spec/](docs/skills-spec/README.md) |
+| 各ツールの hooks 仕様の調査記録 | [docs/hooks-spec/](docs/hooks-spec/README.md) |
+| 各ツールの Subagents 仕様の調査記録 | [docs/subagents-spec/](docs/subagents-spec/README.md) |
 | 用語集 | [CONTEXT.md](CONTEXT.md) |
 
 ## 考え方
@@ -20,14 +20,14 @@ Claude Code / Codex / Cursor 用の、**プロジェクトスコープのハー�
 **このリポジトリの本質は「各プロジェクトのプロジェクトスコープを育てるためのハーネス」である。**
 持ち物はそのための装置だけ — 整備を実行する harness-check スキル、スキルを作る
 imk-skill-creator スキル、hooks を作る imk-hooks-creator スキル、サブエージェント定義を
-作る imk-subagent-creator スキル、そしてユーザー自身の常駐指示を 3 ツールへ
+作る imk-subagent-creator スキル、そしてユーザー自身の常駐指示を 4 ツールへ
 一元配布する仕組み。
 プロジェクトスコープの育て方の規約は常駐指示ではなく、harness-check の手順と
 テンプレートに埋め込まれている。
 
 | スコープ | 実体 |
 |---|---|
-| **ユーザースコープ**（このリポジトリが管理） | `~/.claude/` `~/.codex/` `~/.agents/` に展開される。全プロジェクト共通 |
+| **ユーザースコープ**（このリポジトリが管理） | `~/.claude/` `~/.codex/` `~/.agents/` `~/.config/opencode/` に展開される。全プロジェクト共通 |
 | **プロジェクトスコープ**（各プロジェクトで育てる） | 各リポジトリ内の CLAUDE.md / AGENTS.md / `.claude/` / HARNESS.md 等。そのプロジェクト専用 |
 
 - **ユーザースコープ（このリポジトリ）は最小限に保つ。** ハーネスが提供する常駐指示はゼロ。`shared/instructions/` はユーザーが自分の常駐指示（個人的な好み等）を書く場所で、`00-style.md` はその記入例。
@@ -41,17 +41,18 @@ hooks（「毎回言っても守らない」ことの強制）→ MCP / サブ�
 ## インストール
 
 ```sh
-./install.sh                              # 対話式で使うツールを選ぶ
-./install.sh --tools claude,codex,cursor  # ツールを指定
-./install.sh --tools claude --dry-run     # 変更予定の表示のみ
-./install.sh --tools claude --yes         # 確認をスキップ（CI 等）
-./uninstall.sh                            # アンインストール（--yes / --dry-run も可）
+./install.sh                                       # 対話式で使うツールを選ぶ
+./install.sh --tools claude,codex,cursor,opencode  # ツールを指定
+./install.sh --tools claude --dry-run              # 変更予定の表示のみ
+./install.sh --tools claude --yes                  # 確認をスキップ（CI 等）
+./uninstall.sh                                     # アンインストール（--yes / --dry-run も可）
 ```
 
 - install / uninstall は**実行前に変更予定の一覧を表示し、y/N の確認を取ってから適用する**。変更がなければ何もしない。
 - 常駐指示を書き足したいときは `shared/instructions/` を編集して `./install.sh` を再実行（管理ブロックが更新される）。
 - 手動対応が必要な項目（設定ファイルのマージ、バックアップの確認など）は、実行の最後にまとめて表示される。
-- `~/.claude/settings.json` と `~/.codex/config.toml` は既存ファイルがある場合は上書きしない。permissions は `claude/settings.json` の内容を手動でマージすること。
+- `~/.claude/settings.json`、`~/.codex/config.toml`、`~/.config/opencode/opencode.json` は既存ファイルがある場合は上書きしない。permissions は `claude/settings.json` の内容を手動でマージすること。
+- `opencode.json` は `$schema` 行だけの最小構成で配置する（**コメントを書かない** — OpenCode がコメントを許すのは `opencode.jsonc` で、こちらは `opencode.json` より優先されるため、雛形を `.jsonc` で置くと既存の `opencode.json` を黙って上書きしたのと同じ状態になる）。permissions や MCP を足すときは `$schema` を頼りにエディタ補完で書くか、[OpenCode の設定ドキュメント](https://opencode.ai/docs/config/)を参照する。
 - 既存の実ファイルを置き換える場合は `.bak.<timestamp>` に退避される。
 
 ## 各プロジェクトへの導入 — harness-check を明示実行する
@@ -59,11 +60,12 @@ hooks（「毎回言っても守らない」ことの強制）→ MCP / サブ�
 インストールで置かれるのはユーザースコープだけで、**各プロジェクトのプロジェクトスコープは自動では作られない**。
 新しいプロジェクトでハーネスを使い始めるとき（およびプロジェクトスコープを見直したいとき）は、
 そのプロジェクトで **harness-check スキルを明示的に実行する**
-（Claude Code, Cursor なら `/harness-check`、Codex なら `$harness-check` で起動できる）。
+（Claude Code, Cursor なら `/harness-check`、Codex なら `$harness-check`、OpenCode なら
+「harness-check を使って」と依頼して起動できる）。
 
 harness-check は次を行う:
 
-1. **使用ツールの確認** — そのプロジェクトで使うツール（Claude Code / Codex / Cursor）を
+1. **使用ツールの確認** — そのプロジェクトで使うツール（Claude Code / Codex / Cursor / OpenCode）を
    ユーザーに確認する。以降の要否と配置場所（`.claude/skills/` か `.agents/skills/` か、
    CLAUDE.md か AGENTS.md か）はこの選択で決まる
 2. **現状確認** — 下表の各項目と `HARNESS.md` の有無をプロジェクトルートで確認する
@@ -109,7 +111,7 @@ harness-check が `HARNESS.md` への移行を提案する。
 
 ## ホーム側の CLAUDE.md / AGENTS.md は「管理ブロック」方式
 
-`~/.claude/CLAUDE.md` と `~/.codex/AGENTS.md` は symlink ではなく実ファイルで、ハーネスはマーカーで囲まれたブロックだけを管理する。**ブロックの外は自由編集エリア**で、アップデートでもアンインストールでも保持される。
+`~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`、`~/.config/opencode/AGENTS.md` は symlink ではなく実ファイルで、ハーネスはマーカーで囲まれたブロックだけを管理する。**ブロックの外は自由編集エリア**で、アップデートでもアンインストールでも保持される。
 
 ```markdown
 ここは自由編集エリア。個人メモや端末固有の指示を書ける。
@@ -144,15 +146,18 @@ harness-check が `HARNESS.md` への移行を提案する。
 | 旧バージョン（symlink 方式）からの移行 | install が symlink を実ファイル化し、バックアップがあれば内容を引き継いだうえでブロックを追記 |
 | ハーネス由来かの判定（スキル） | symlink 先が「このリポジトリ配下」かで判定。ユーザーが自分で置いたスキル・ファイルには触れない |
 | リポジトリを移動した | 旧パスを指すリンク切れは、パスに `imk-harness` を含む場合のみ掃除対象。基本は移動前に `./uninstall.sh` を実行すること |
-| settings.json / config.toml | コピー配置のため、アップデートに追従しない・アンインストールでも削除しない（サマリで案内） |
+| settings.json / config.toml / opencode.json | コピー配置のため、アップデートに追従しない・アンインストールでも削除しない（サマリで案内） |
 | バックアップが複数ある | 復元されるのは最新の 1 つのみ。残りはサマリで案内 |
 | 複数クローンからのインストール | 想定しない（1 クローンを正とする） |
 
 ## スキルの配置
 
 実体は `shared/skills/` にあり、install.sh が選択したツールのネイティブなスキャン場所へ
-symlink する（Claude Code: `~/.claude/skills/`、Codex / Cursor: `~/.agents/skills/`）。
+symlink する（Claude Code: `~/.claude/skills/`、Codex / Cursor / OpenCode: `~/.agents/skills/`）。
 どこに何が張られるかは install 時のプラン表示で確認できる。
+
+OpenCode は `~/.claude/skills` と `~/.config/opencode/skills` もスキャンするが、同名スキルは
+重複排除されるため Claude Code と併用しても二重表示にならない。
 
 ツールの組み合わせごとの配置・Cursor での重複表示の扱い・決定の経緯は
 [ADR-0003](docs/adr/0003-skill-placement.md) を参照。Claude Code が `.agents/skills` に

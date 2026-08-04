@@ -5,10 +5,10 @@
 load helpers
 
 @test "install then uninstall leaves no harness artifacts" {
-  install_tools claude,codex
+  install_tools claude,codex,opencode
   uninstall_all
 
-  # 残ってよいのはコピー配置した settings.json / config.toml と、
+  # 残ってよいのはコピー配置した settings.json / config.toml / opencode.json と、
   # 空になった ~/.agents（rmdir で畳むのは skills ディレクトリまで）だけ
   [ "$(snapshot)" = "$(printf '%s\n' \
     "$HOME" \
@@ -16,7 +16,19 @@ load helpers
     "$HOME/.claude" \
     "$HOME/.claude/settings.json" \
     "$HOME/.codex" \
-    "$HOME/.codex/config.toml")" ]
+    "$HOME/.codex/config.toml" \
+    "$HOME/.config" \
+    "$HOME/.config/opencode" \
+    "$HOME/.config/opencode/opencode.json")" ]
+}
+
+@test "uninstall removes opencode block and keeps config" {
+  install_tools opencode
+  uninstall_all
+
+  [ ! -e "$HOME/.config/opencode/AGENTS.md" ]
+  [ -f "$HOME/.config/opencode/opencode.json" ]
+  [ ! -e "$HOME/.agents/skills" ]
 }
 
 @test "skills the user placed themselves survive uninstall" {

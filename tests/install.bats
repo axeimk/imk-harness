@@ -24,6 +24,41 @@ load helpers
   [ ! -e "$HOME/.agents" ]
 }
 
+@test "opencode install places instructions, config, and skills" {
+  install_tools opencode
+
+  assert_block_matches "$REPO/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+  diff "$REPO/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+  assert_skills_linked "$HOME/.agents/skills"
+
+  # claude / codex 側は無傷
+  [ ! -e "$HOME/.claude" ]
+  [ ! -e "$HOME/.codex" ]
+}
+
+@test "deselecting opencode cleans up its artifacts" {
+  install_tools claude,opencode
+  install_tools claude
+
+  # 管理ブロックのみの AGENTS.md はファイルごと削除される
+  [ ! -e "$HOME/.config/opencode/AGENTS.md" ]
+  [ ! -e "$HOME/.agents/skills" ]
+  # コピー配置した opencode.json は非破壊方針により残る
+  [ -f "$HOME/.config/opencode/opencode.json" ]
+  # claude 側は無傷
+  assert_block_matches "$REPO/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+  assert_skills_linked "$HOME/.claude/skills"
+}
+
+@test "existing opencode.json is never overwritten" {
+  mkdir -p "$HOME/.config/opencode"
+  echo '{"mine": true}' > "$HOME/.config/opencode/opencode.json"
+
+  install_tools opencode
+
+  [ "$(cat "$HOME/.config/opencode/opencode.json")" = '{"mine": true}' ]
+}
+
 @test "second install reports no changes and leaves FS identical" {
   install_tools claude,codex
   local before

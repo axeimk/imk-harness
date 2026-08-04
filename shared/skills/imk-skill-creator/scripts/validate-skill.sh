@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # スキルディレクトリ 1 つを検査する可搬スクリプト。
-# 「どのツール（Claude Code / Codex / Cursor）で読まれても本文が成立する」
+# 「どのツール（Claude Code / Codex / Cursor / OpenCode）で読まれても本文が成立する」
 # 互換規約（references/conventions.md）を機械検査する。
 # エラーがあれば非 0 で終了する。
 #
@@ -60,7 +60,7 @@ elif [ "${#desc}" -gt 1024 ]; then
 fi
 
 # 禁止パターン: 本文の意味を変える Claude Code 専用機能
-# （Codex / Cursor では展開されず、生テキストがモデルに渡って指示が壊れる）
+# （Codex / Cursor / OpenCode では展開されず、生テキストがモデルに渡って指示が壊れる）
 LC_ALL=C grep -nE '(^|[[:space:]])!`' "$md" \
   && err "動的コンテキスト注入 !\`cmd\` は使えません"
 LC_ALL=C grep -n '^```!' "$md" \

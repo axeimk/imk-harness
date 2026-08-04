@@ -1,12 +1,12 @@
 ---
 name: imk-subagent-creator
-description: Claude Code / Codex / Cursor のカスタムサブエージェント定義を作成・修正・検証する。ツールごとに異なる配置場所、Markdown / TOML 形式、モデル・権限・バックグラウンド設定の正確な参照資料とテンプレートを含む。ユーザーが「サブエージェントを作って」「レビュー担当や調査担当を定義して」「.claude/agents・.codex/agents・.cursor/agents を整備して」と依頼したとき、既存のカスタムエージェントが発見・起動・委譲されない問題を調べるとき、複数ツール向けに同じ役割を揃えるときは必ずこのスキルを使う。単に今回の作業をサブエージェントへ委譲するだけで、再利用する定義ファイルを作らない依頼には使わない。
+description: Claude Code / Codex / Cursor / OpenCode のカスタムサブエージェント定義を作成・修正・検証する。ツールごとに異なる配置場所、Markdown / TOML 形式、モデル・権限・バックグラウンド設定の正確な参照資料とテンプレートを含む。ユーザーが「サブエージェントを作って」「レビュー担当や調査担当を定義して」「.claude/agents・.codex/agents・.cursor/agents・.opencode/agents を整備して」と依頼したとき、既存のカスタムエージェントが発見・起動・委譲されない問題を調べるとき、複数ツール向けに同じ役割を揃えるときは必ずこのスキルを使う。単に今回の作業をサブエージェントへ委譲するだけで、再利用する定義ファイルを作らない依頼には使わない。
 ---
 
-# imk-subagent-creator — 3 ツールのサブエージェント定義作成
+# imk-subagent-creator — 4 ツールのサブエージェント定義作成
 
-Claude Code / Codex / Cursor のカスタムサブエージェント定義を作成・修正する。
-3 ツールとも「独立したコンテキストで専門タスクを実行し、親へ結果を返す」仕組みだが、
+Claude Code / Codex / Cursor / OpenCode のカスタムサブエージェント定義を作成・修正する。
+4 ツールとも「独立したコンテキストで専門タスクを実行し、親へ結果を返す」仕組みだが、
 **定義形式・設定フィールド・呼び出し方は異なる**。共通の役割を先に設計し、
 各ツールのネイティブ形式へ個別に変換する。
 
@@ -15,6 +15,7 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 - Claude Code → `references/claude-code.md`
 - Codex → `references/codex.md`
 - Cursor → `references/cursor.md`
+- OpenCode → `references/opencode.md`
 - `最高` / `高` / `中` / `低`のモデル階層を使う → `references/model-levels.md`
 
 ## 手順
@@ -26,7 +27,7 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 - 担当させる仕事と、実際の利用例 2〜3 件
 - 親エージェントがいつ委譲すべきか。明示呼び出し専用か、自動委譲も期待するか
 - 期待する返却物と完了条件
-- 対象ツール（Claude Code / Codex / Cursor）
+- 対象ツール（Claude Code / Codex / Cursor / OpenCode）
 - プロジェクト共有か、ユーザー個人用か
 - 読み取り専用か、編集・コマンド実行を許すか
 - 親のモデルを継承するか、`最高` / `高` / `中` / `低`の階層または特定モデルを使うか
@@ -34,10 +35,10 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 
 配置先:
 
-| スコープ | Claude Code | Codex | Cursor |
-|---|---|---|---|
-| プロジェクト | `.claude/agents/<name>.md` | `.codex/agents/<name>.toml` | `.cursor/agents/<name>.md` |
-| ユーザー | `~/.claude/agents/<name>.md` | `~/.codex/agents/<name>.toml` | `~/.cursor/agents/<name>.md` |
+| スコープ | Claude Code | Codex | Cursor | OpenCode |
+|---|---|---|---|---|
+| プロジェクト | `.claude/agents/<name>.md` | `.codex/agents/<name>.toml` | `.cursor/agents/<name>.md` | `.opencode/agents/<name>.md` |
+| ユーザー | `~/.claude/agents/<name>.md` | `~/.codex/agents/<name>.toml` | `~/.cursor/agents/<name>.md` | `~/.config/opencode/agents/<name>.md` |
 
 ユーザー個人用ファイルを作るときは、ホームへ直接置くか、原本リポジトリで管理して
 展開するかを確認する。管理リポジトリがあれば原本側を編集する。
@@ -75,7 +76,7 @@ Claude Code / Codex / Cursor のカスタムサブエージェント定義を作
 
 ユーザーがモデル階層を指定したら `references/model-levels.md` を読み、対象ツールの
 正規モデル ID と推論量へ変換する。たとえば「最高モデルで」と言われた場合、
-Claude Code / Codex / Cursor で同じ文字列を使わず、対応表の各ツール列を使う。
+Claude Code / Codex / Cursor / OpenCode で同じ文字列を使わず、対応表の各ツール列を使う。
 
 - モデル指定が無ければ、親モデルと推論量の継承を既定にする
 - 階層と別にモデルまたは推論量が明示されたら、その明示指定を優先する
@@ -90,20 +91,22 @@ Claude Code / Codex / Cursor で同じ文字列を使わず、対応表の各ツ
 - Claude Code: `templates/claude-code-agent.md.template`
 - Codex: `templates/codex-agent.toml.template`
 - Cursor: `templates/cursor-agent.md.template`
+- OpenCode: `templates/opencode-agent.md.template`
 
-3 ツール向けではネイティブファイルをそれぞれ作る。Cursor は `.claude/agents/` と
+複数ツール向けではネイティブファイルをそれぞれ作る。Cursor は `.claude/agents/` と
 `.codex/agents/` も互換スキャンするが、同名定義が複数見える場合の意図を明確にするため
-`.cursor/agents/` に Cursor 用を置く（Cursor 用が優先される）。
+`.cursor/agents/` に Cursor 用を置く（Cursor 用が優先される）。OpenCode は他ツールの
+配置を互換スキャンしないため、必ずネイティブ位置に置く。
 
 設定を機械的にコピーしない。特に次はツール固有である。
 
-| 意図 | Claude Code | Codex | Cursor |
-|---|---|---|---|
-| 指示本文 | Markdown 本文 | `developer_instructions` | Markdown 本文 |
-| 親モデルを継承 | `model: inherit` または省略 | `model` を省略 | `model: inherit` または省略 |
-| 推論量を固定 | `effort` | `model_reasoning_effort` | 対応する `model` slug |
-| 読み取り専用 | `tools` / `disallowedTools` / `permissionMode` | `sandbox_mode = "read-only"` | `readonly: true` |
-| 常時バックグラウンド | `background: true` | 定義ファイルの共通フィールドなし | `is_background: true` |
+| 意図 | Claude Code | Codex | Cursor | OpenCode |
+|---|---|---|---|---|
+| 指示本文 | Markdown 本文 | `developer_instructions` | Markdown 本文 | Markdown 本文（frontmatter 後がそのまま prompt） |
+| 親モデルを継承 | `model: inherit` または省略 | `model` を省略 | `model: inherit` または省略 | `model` を省略 |
+| 推論量を固定 | `effort` | `model_reasoning_effort` | 対応する `model` slug | `variant`（値はモデルごとに違う） |
+| 読み取り専用 | `tools` / `disallowedTools` / `permissionMode` | `sandbox_mode = "read-only"` | `readonly: true` | `permission` で `edit: deny`（必要なら `bash: deny`） |
+| 常時バックグラウンド | `background: true` | 定義ファイルの共通フィールドなし | `is_background: true` | 定義ファイルの共通フィールドなし |
 
 モデル名・利用可否・推論量は変化しやすい。ユーザーに理由が無ければ継承を既定にし、
 固定する場合は対象ツールの現在のモデル一覧を確認する。秘密情報や認証情報を定義へ書かない。
@@ -116,6 +119,7 @@ Claude Code / Codex / Cursor で同じ文字列を使わず、対応表の各ツ
 scripts/validate-agent.sh claude-code .claude/agents/<name>.md
 scripts/validate-agent.sh codex .codex/agents/<name>.toml
 scripts/validate-agent.sh cursor .cursor/agents/<name>.md
+scripts/validate-agent.sh opencode .opencode/agents/<name>.md
 ```
 
 フロントマター / TOML の必須項目、命名、本文、別ツールの代表的なフィールド混入を検査する。

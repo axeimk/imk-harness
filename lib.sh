@@ -14,6 +14,9 @@ DRYRUN=0
 PLAN=()
 NOTICES=()
 
+# OpenCode の設定ディレクトリ（XDG_CONFIG_HOME 準拠。未設定なら ~/.config）
+OPENCODE_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+
 notice() { NOTICES+=("$1"); }
 
 # 同一内容の notice を重複して積まない（複数の skills ルートが同じ更新を検知したとき用）

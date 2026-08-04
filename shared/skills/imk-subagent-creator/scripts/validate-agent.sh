@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Claude Code / Codex / Cursor のカスタムサブエージェント定義を機械検査する。
-# 使い方: validate-agent.sh <claude-code|codex|cursor> <definition-file>
+# Claude Code / Codex / Cursor / OpenCode のカスタムサブエージェント定義を機械検査する。
+# 使い方: validate-agent.sh <claude-code|codex|cursor|opencode> <definition-file>
 set -uo pipefail
 
 if [ $# -ne 2 ] || [ ! -f "${2:-}" ]; then
-  echo "使い方: $(basename "$0") <claude-code|codex|cursor> <definition-file>" >&2
+  echo "使い方: $(basename "$0") <claude-code|codex|cursor|opencode> <definition-file>" >&2
   exit 2
 fi
 
@@ -113,6 +113,9 @@ validate_markdown() {
   if [ "$target" = "claude-code" ]; then
     [ -n "$name" ] || err "name がありません"
     [ -n "$desc" ] || err "description がありません"
+  elif [ "$target" = "opencode" ]; then
+    [ -n "$desc" ] || err "description がありません（OpenCode では必須）"
+    # name は省略可能（ファイル名がエージェント名になる）
   else
     [ -n "$name" ] || warn "name は Cursor では省略可能ですが、委譲と複数ツールでの一貫性のため明示を推奨します"
     [ -n "$desc" ] || warn "description は Cursor では省略可能ですが、自動委譲のため明示を推奨します"
@@ -148,6 +151,31 @@ validate_markdown() {
       ""|low|medium|high|xhigh|max) ;;
       *) err "未対応の effort です: ${value}" ;;
     esac
+  elif [ "$target" = "opencode" ]; then
+    local f
+    for f in readonly is_background background permissionMode tools; do
+      LC_ALL=C grep -Eq "^[[:space:]]*${f}[[:space:]]*:" <<< "$fm" \
+        && err "${f} は OpenCode のフィールドではありません。ツール制御は permission を使ってください"
+    done
+    # OpenCode は未知フィールドをエラーにせず options へ吸い込むため、起動しても気づけない
+    LC_ALL=C grep -Eq '^[[:space:]]*effort[[:space:]]*:' <<< "$fm" \
+      && err "effort は OpenCode のフィールドではありません。推論量は variant で指定してください"
+    LC_ALL=C grep -Eq '^[[:space:]]*prompt[[:space:]]*:' <<< "$fm" \
+      && err "frontmatter 後の本文がそのまま prompt になります。frontmatter に prompt: は書けません"
+    value="$(unquote "$(yaml_field mode "$fm")")"
+    case "$value" in
+      ""|primary|subagent|all) ;;
+      *) err "未対応の mode です: ${value}（primary / subagent / all）" ;;
+    esac
+    value="$(unquote "$(yaml_field model "$fm")")"
+    if [ -n "$value" ]; then
+      case "$value" in
+        */*) ;;
+        *) err "model は provider/model-id 形式で指定してください（例: anthropic/claude-sonnet-4-6）: ${value}" ;;
+      esac
+    elif LC_ALL=C grep -Eq '^[[:space:]]*variant[[:space:]]*:' <<< "$fm"; then
+      warn "variant は model を指定したときだけ効きます（親モデルを継承する定義では無視されます）"
+    fi
   else
     LC_ALL=C grep -Eq '^[[:space:]]*background[[:space:]]*:' <<< "$fm" \
       && err "background は Claude Code のフィールドです。Cursor では is_background を使ってください"
@@ -211,8 +239,9 @@ case "$tool" in
   claude-code) validate_markdown claude-code ;;
   codex) validate_codex ;;
   cursor) validate_markdown cursor ;;
+  opencode) validate_markdown opencode ;;
   *)
-    echo "ERROR: 未対応のツールです: ${tool}（claude-code / codex / cursor）" >&2
+    echo "ERROR: 未対応のツールです: ${tool}（claude-code / codex / cursor / opencode）" >&2
     exit 2
     ;;
 esac

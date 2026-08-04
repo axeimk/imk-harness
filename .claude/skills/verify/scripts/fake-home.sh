@@ -47,4 +47,7 @@ if [ "$1" = "--path" ]; then
   exit 0
 fi
 
+# XDG_CONFIG_HOME を落とす。OpenCode の配置先は ${XDG_CONFIG_HOME:-$HOME/.config}/opencode
+# なので、実環境で設定されていると HOME を差し替えても実 ~/.config へ展開してしまう
+unset XDG_CONFIG_HOME
 HOME="$dir" "$@"

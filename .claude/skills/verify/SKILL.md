@@ -14,12 +14,13 @@ description: このプロジェクト（imk-harness）の変更を実際に動�
 代表フローの回帰は自動テスト（`./test.sh`）が担う。このレシピは、テストにない経路や
 対話フロー・新機能を実際に展開して観察するためのもの。`scripts/fake-home.sh` 経由で
 インストーラを実行する。
-このラッパーが `$HOME` を一時ディレクトリに差し替えるので、実ホームには触れない
-（`HOME="$H"` の付け忘れ事故が起きない）。リポジトリルートで:
+このラッパーが `$HOME` を一時ディレクトリに差し替え、`XDG_CONFIG_HOME` を落とすので、
+実ホームには触れない（`HOME="$H"` の付け忘れ事故と、OpenCode の配置先が実 `~/.config` へ
+逃げる事故が起きない）。リポジトリルートで:
 
 ```sh
 S=.claude/skills/verify/scripts/fake-home.sh
-"$S" ./install.sh --tools claude,codex --yes
+"$S" ./install.sh --tools claude,codex,opencode --yes
 find "$("$S" --path)" | sort    # 配置結果の確認
 "$S" ./uninstall.sh --yes
 find "$("$S" --path)" | sort    # 残骸がないことの確認

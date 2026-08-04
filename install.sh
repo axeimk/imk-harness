@@ -9,7 +9,7 @@
 #
 # 使い方:
 #   ./install.sh                              # 対話式で使うツールを選ぶ
-#   ./install.sh --tools claude,codex,cursor  # ツールを指定
+#   ./install.sh --tools claude,codex,cursor,opencode  # ツールを指定
 #   ./install.sh --tools claude --yes         # 確認をスキップ（CI 等）
 #   ./install.sh --tools claude --dry-run     # 変更予定の表示のみ
 #
@@ -20,16 +20,18 @@
 #       Claude Code: ~/.claude/skills
 #       Codex:       ~/.agents/skills（公式のスキャン場所。description による自動発火が効く）
 #       Cursor:      ~/.agents/skills（ネイティブ扱いで常にスキャンされる）
+#       OpenCode:    ~/.agents/skills（~/.claude/skills と ~/.config/opencode/skills も
+#                     スキャンするが、同名スキルは重複排除されるため共有場所で足りる）
 #   - Claude + Codex + Cursor 併用時、Cursor には ~/.claude/skills の互換スキャンで同名スキルが
 #     二重に見える。Cursor の third-party 設定 OFF で解消できるため案内する（ADR-0003）
 #   - 既存の実ファイルを置き換える場合は .bak.<timestamp> に退避
-#   - settings.json / config.toml は既存があれば触らない（手動マージ）
+#   - settings.json / config.toml / opencode.json は既存があれば触らない（手動マージ）
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")" && pwd)"
 TS="$(date +%Y%m%d%H%M%S)"
 . "$REPO/lib.sh"
 
-usage() { echo "usage: ./install.sh [--tools claude,codex,cursor] [--yes|-y] [--dry-run]"; }
+usage() { echo "usage: ./install.sh [--tools claude,codex,cursor,opencode] [--yes|-y] [--dry-run]"; }
 
 # --- 引数パース ---
 TOOLS_ARG=""; ASSUME_YES=0; DRY_ONLY=0
@@ -45,32 +47,34 @@ while [ $# -gt 0 ]; do
 done
 
 # --- ツール選択 ---
-USE_CLAUDE=0; USE_CODEX=0; USE_CURSOR=0
+USE_CLAUDE=0; USE_CODEX=0; USE_CURSOR=0; USE_OPENCODE=0
 if [ -n "$TOOLS_ARG" ]; then
   IFS=',' read -ra sel <<< "$TOOLS_ARG"
   for t in "${sel[@]}"; do
     case "$t" in
-      claude) USE_CLAUDE=1 ;;
-      codex)  USE_CODEX=1 ;;
-      cursor) USE_CURSOR=1 ;;
-      *) echo "unknown tool: $t (claude / codex / cursor)"; exit 1 ;;
+      claude)   USE_CLAUDE=1 ;;
+      codex)    USE_CODEX=1 ;;
+      cursor)   USE_CURSOR=1 ;;
+      opencode) USE_OPENCODE=1 ;;
+      *) echo "unknown tool: $t (claude / codex / cursor / opencode)"; exit 1 ;;
     esac
   done
 else
   ask() { local a; read -r -p "$1 [y/N]: " a; [ "$a" = "y" ] || [ "$a" = "Y" ]; }
-  ask "Claude Code を使いますか?" && USE_CLAUDE=1 || true
-  ask "Codex を使いますか?"       && USE_CODEX=1  || true
-  ask "Cursor を使いますか?"      && USE_CURSOR=1 || true
+  ask "Claude Code を使いますか?" && USE_CLAUDE=1   || true
+  ask "Codex を使いますか?"       && USE_CODEX=1    || true
+  ask "Cursor を使いますか?"      && USE_CURSOR=1   || true
+  ask "OpenCode を使いますか?"    && USE_OPENCODE=1 || true
 fi
 
-if [ $((USE_CLAUDE + USE_CODEX + USE_CURSOR)) -eq 0 ]; then
+if [ $((USE_CLAUDE + USE_CODEX + USE_CURSOR + USE_OPENCODE)) -eq 0 ]; then
   echo "ツールが選択されていません。中止します。"
   exit 1
 fi
 
-# ~/.agents/skills が必要か（Codex / Cursor はともにネイティブでスキャンする — ADR-0003）
+# ~/.agents/skills が必要か（Codex / Cursor / OpenCode はいずれもネイティブでスキャンする — ADR-0003）
 NEED_AGENTS=0
-if [ "$USE_CODEX" -eq 1 ] || [ "$USE_CURSOR" -eq 1 ]; then
+if [ "$USE_CODEX" -eq 1 ] || [ "$USE_CURSOR" -eq 1 ] || [ "$USE_OPENCODE" -eq 1 ]; then
   NEED_AGENTS=1
 fi
 
@@ -87,6 +91,12 @@ apply_changes() {
   if [ "$USE_CODEX" -eq 1 ]; then
     write_managed_block "$REPO/codex/AGENTS.md" "$HOME/.codex/AGENTS.md"
     copy_if_absent "$REPO/codex/config.toml" "$HOME/.codex/config.toml"
+  fi
+  if [ "$USE_OPENCODE" -eq 1 ]; then
+    # 注意: このファイルが存在すると OpenCode は ~/.claude/CLAUDE.md をグローバル指示として
+    # 読まなくなる（フォールバックはネイティブ不在時のみ）。内容は同一の生成物なので実害はない
+    write_managed_block "$REPO/opencode/AGENTS.md" "$OPENCODE_CONFIG_DIR/AGENTS.md"
+    copy_if_absent "$REPO/opencode/opencode.json" "$OPENCODE_CONFIG_DIR/opencode.json"
   fi
 
   # 2. スキル配置（symlink のため中身の更新は自動反映。更新検知の記録だけを更新する）
@@ -118,6 +128,10 @@ apply_changes() {
     remove_managed_link "$HOME/.codex/AGENTS.md"  # 旧方式の symlink
     remove_block "$HOME/.codex/AGENTS.md"
   fi
+  if [ "$USE_OPENCODE" -eq 0 ]; then
+    remove_managed_link "$OPENCODE_CONFIG_DIR/AGENTS.md"
+    remove_block "$OPENCODE_CONFIG_DIR/AGENTS.md"
+  fi
   prune_skills_root "$HOME/.codex/skills" all  # 旧バージョンの配置場所を掃除
 
   # 4. Cursor 向け案内
@@ -126,6 +140,11 @@ apply_changes() {
       notice "Cursor には ~/.claude/skills の互換スキャンで同名スキルが二重に見えます。Cursor Settings > Rules, Skills, Subagents > 'Include third-party Plugins, Skills, and other configs' を OFF にすると解消します（OFF にするとプロジェクト側の .claude/ 系設定も Cursor から見えなくなる点に注意。ADR-0003 参照）。"
     fi
     notice "Cursor のユーザーレベル常駐指示: Cursor Settings > Rules, Skills, Subagents の User Rules に claude/CLAUDE.md の内容を貼り付けてください。"
+  fi
+
+  # 5. OpenCode 向け案内
+  if [ "$USE_OPENCODE" -eq 1 ] && [ "$USE_CLAUDE" -eq 1 ]; then
+    notice "OpenCode は ${OPENCODE_CONFIG_DIR}/AGENTS.md があるとき ~/.claude/CLAUDE.md をグローバル指示として読みません（管理ブロックの中身は同一なので実害はありませんが、~/.claude/CLAUDE.md のブロック外に書いた個人メモは OpenCode に届きません）。必要なら ${OPENCODE_CONFIG_DIR}/AGENTS.md のブロック外へも書いてください。"
   fi
 }
 

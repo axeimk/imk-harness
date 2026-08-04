@@ -26,7 +26,7 @@ Cursor はネイティブ定義に加え、Claude Code / Codex の互換配置�
 
 - ユーザー定義よりプロジェクト定義が優先される
 - 同名なら `.cursor/` が `.claude/` / `.codex/` より優先される
-- 3 ツール向けにそれぞれ定義を置く場合、Cursor 用を `.cursor/agents/` に置けば
+- 複数ツール向けにそれぞれ定義を置く場合、Cursor 用を `.cursor/agents/` に置けば
   Cursor がどれを使うか明確になる
 
 ## ファイル形式とフィールド

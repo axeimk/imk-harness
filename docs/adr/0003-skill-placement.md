@@ -6,6 +6,8 @@
   Cursor の重複表示は「単に許容」から「third-party 設定 OFF の案内で解消」に精緻化
 - 改訂: 2026-07-18 — 同じ原則（実体はツール非依存の場所、ネイティブ位置へ symlink）を
   プロジェクト層へ延長。決定の原則は不変
+- 改訂: 2026-08-04 — OpenCode 対応の調査を反映。OpenCode も `~/.agents/skills` を
+  ネイティブスキャンするため配置の決定は不変（専用配置は不要）
 
 ## コンテキスト
 
@@ -17,6 +19,7 @@
 | Claude Code | `~/.claude/skills` のみ（`.agents` 対応は未実装 — [claude-code#31005](https://github.com/anthropics/claude-code/issues/31005)） |
 | Codex | `~/.agents/skills`（公式）。`~/.codex/skills` も読むが、ソース上「Deprecated user skills location, kept for backward compatibility」と明記（[loader.rs](https://github.com/openai/codex/blob/main/codex-rs/core-skills/src/loader.rs)） |
 | Cursor | ネイティブ: `~/.agents/skills`・`~/.cursor/skills`（常に読む）。互換: `~/.claude/skills`・`~/.codex/skills`（third-party 設定で無効化可） |
+| OpenCode | ネイティブ: `~/.config/opencode/skills`。加えて `~/.claude/skills`・`~/.agents/skills` もスキャン。同名スキルは名前で重複排除され必ず 1 件だけ提示される（opencode 1.18.12 で実機確認。どちらのルートが採用されるかは実行ごとに変わるため、同名で別内容を置いてはいけない） |
 
 Cursor のスキャン対象は 2 系統に分かれることが CLI（cursor-agent 2026.07.09）の
 実装確認で判明した:
@@ -41,6 +44,9 @@ Cursor のスキャン対象は 2 系統に分かれることが CLI（cursor-ag
 - Codex または Cursor 使用時: `~/.agents/skills/` へ（両ツールともネイティブでスキャンする。
   Cursor を `~/.claude/skills` の互換スキャン頼みにすると third-party 設定 OFF で
   スキルが見えなくなるため、Cursor 使用時も必ずこちらへ配置する）
+- OpenCode 使用時: `~/.agents/skills/` へ（ネイティブスキャン対象。Claude Code 併用時に
+  `~/.claude/skills` と両方から見えても同名は重複排除されるため、Cursor のような
+  重複表示の問題は起きない）
 - Claude Code + Cursor 併用時は両方へ配置され、Cursor（IDE）に重複表示が生じる。
   これは上記 third-party 設定を OFF にすることで解消できるため、install.sh がその案内を
   表示する（OFF の副作用と cursor-agent CLI の未対応は上記コンテキスト参照）
@@ -81,5 +87,7 @@ harness-check スキルに記載する（展開先で読めるよう、本 ADR �
   プロジェクト側の `.claude/` 系設定も Cursor から見えなくなる点はユーザーの選択に委ねる
 - cursor-agent CLI では重複（`~/.claude` + `~/.agents` の 2 重）が残る。Cursor 側の
   設定対応待ち
+- OpenCode は `~/.agents/skills` をネイティブスキャンし同名を重複排除するため、追加の
+  配置場所も重複対策の案内も不要
 - Claude Code が `.agents/skills` に対応した時点で `~/.agents/skills` の 1 箇所に
   統合して本 ADR を改訂する予定
