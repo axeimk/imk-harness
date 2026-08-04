@@ -17,7 +17,7 @@ description: プロジェクトスコープのハーネス（CLAUDE.md / AGENTS.
 
 ## 手順
 
-1. **使用ツールの確認**: このプロジェクトで使うコーディングエージェント（Claude Code / Codex / Cursor）をユーザーに確認する。既存ファイルの有無から推測しない（CLAUDE.md しか無いプロジェクトでこれから Codex を使い始めることもある）。`HARNESS.md` に記録済みならそれに従い、再確認しない。回答は手順 11 で `HARNESS.md` に記録する。以降の手順の要否と配置場所はこの選択で決まる。
+1. **使用ツールの確認**: このプロジェクトで使うコーディングエージェント（Claude Code / Codex / Cursor）をユーザーに確認する。既存ファイルの有無から推測しない（CLAUDE.md しか無いプロジェクトでこれから Codex を使い始めることもある）。`HARNESS.md` に記録済みならそれに従い、再確認しない。回答は手順 12 で `HARNESS.md` に記録する。以降の手順の要否と配置場所はこの選択で決まる。
 2. **現状確認**（プロジェクトルートで）
    - `HARNESS.md`（採否の記録）があるか。旧規約の記録（CLAUDE.md / AGENTS.md の「ハーネス」節）が残っていないかも確認する
    - `CLAUDE.md` があるか（Claude Code を使う場合）
@@ -28,8 +28,9 @@ description: プロジェクトスコープのハーネス（CLAUDE.md / AGENTS.
    - domain-modeling / grilling スキルがあるか（配置は verify スキルと同じ規約）
    - `CONTEXT.md`（プロジェクト用語集）があるか
    - ADR 置き場（`docs/adr/` など設計記録のディレクトリ）があるか
-   - プロジェクト固有 permissions / hooks があるか（Claude Code: `.claude/settings.json`、Codex: `config.toml`、Cursor: `.cursor/`）
-3. **欠けているものを 1 項目ずつ提示し、要る / 要らないをユーザーに選ばせる**（「ユーザーへの確認方法」に従う）。勝手に全部作らない。domain-modeling と grilling は別項目として提示する（grilling は単独で成立する）。`HARNESS.md` に「使わない」と記録済みの項目は一覧に載せない（ユーザーが明示的に見直しを求めたときを除く。見直し時は欠けているものに加え、既存の要素についても継続 / 廃止を確認する）。
+   - プロジェクト固有 permissions があるか（Claude Code: `.claude/settings.json`、Codex: `.codex/config.toml` / `.codex/rules/`、Cursor: `.cursor/`）
+   - プロジェクト固有 hooks があるか（Claude Code: `.claude/settings.json`、Codex: `.codex/hooks.json` / `.codex/config.toml`、Cursor: `.cursor/hooks.json`）
+3. **欠けているものを 1 項目ずつ提示し、要る / 要らないをユーザーに選ばせる**（「ユーザーへの確認方法」に従う）。勝手に全部作らない。domain-modeling と grilling、permissions と hooks はそれぞれ別項目として提示する。いずれも独立して採否を決められ、permissions と hooks は併用してよい。`HARNESS.md` に「使わない」と記録済みの項目は一覧に載せない（ユーザーが明示的に見直しを求めたときを除く。見直し時は欠けているものに加え、既存の要素についても継続 / 廃止を確認する）。
    選択に矛盾がある場合（例: CLAUDE.md / AGENTS.md を不採用にしたまま tdd / CONTEXT.md / ADR を採用する — トリガーの追記先が無く、他のエージェントが規約を発見できない）は、作成に入る前にまとめて提示し、どちらを変えるかユーザーに確認する。それでも変えない場合はトリガー追記を省いて導入し、その制約を `HARNESS.md` に記録する。
 4. **CLAUDE.md / AGENTS.md の作成**: `templates/CLAUDE.md.template` を土台に、リポジトリを調査して埋める（ビルド・テストコマンドは package.json / Makefile / pyproject.toml 等から実際に確認する。推測で書かない）。ファイル名は使用ツールに合わせる。両方必要な場合は AGENTS.md（ツール非依存側）を実体にし、CLAUDE.md をそこへの symlink にする（コピーを 2 つ置くと乖離する）。差分が必要になったときだけ実ファイルに分ける。
    テンプレートの「作業の進め方」節はデフォルト案であり、そのまま貼らずプロジェクトの実態と他項目の採否に合わせて調整する（例: verify スキルを使わないなら該当項目を「既知の方法で動作確認する」に書き換える。hooks で lint を強制しているなら手動実行の指示は省く）。既存の CLAUDE.md / AGENTS.md にこの節が無い場合は追記を提案する（作業の進め方はユーザースコープでは定めないため、この節が無いとエージェントごとの振る舞いが揃わない）。
@@ -43,8 +44,19 @@ description: プロジェクトスコープのハーネス（CLAUDE.md / AGENTS.
    - grilling は単体で成立する（domain-modeling が無い場合は記録部分が省かれるだけ）
 8. **CONTEXT.md の作成**（選ばれた場合）: domain-modeling スキル（導入した場合）の手順とテンプレートに従う。導入しない場合は同梱の `templates/domain-modeling/templates/CONTEXT.md.template` を土台にする。その時点で確立している用語だけを書き、リポジトリを走査した一括収集はしない。確立した用語がまだ無いプロジェクトでは「最初の用語が確定したときに作る」で足りるので、無理に作らない。採用したら CLAUDE.md / AGENTS.md に「`CONTEXT.md`（用語集）の語彙で会話・命名する」の 1 行を追記する。
 9. **ADR（設計記録）の導入**（選ばれた場合）: `templates/adr-README.md.template` から `docs/adr/README.md` を作成し、CLAUDE.md / AGENTS.md に「設計記録」節を追記する。節はトリガーだけを持たせ、2 行以内に収める（例: 「設計上の決定は `docs/adr/` に記録する。基準と形式は `docs/adr/README.md` に従う」）。記録する基準・形式・運用の詳細は README 側が持つので、常駐指示には書かない。**最初の ADR はここでは書かない** — 記録すべき決定が出た時点で、README を手本にどのエージェントでも書ける。既存の ADR 置き場・形式があるプロジェクトではそれを尊重し、README の配置は規約が明文化されていない場合の提案にとどめる。
-10. **permissions / hooks の提案**（任意）: 頻用コマンドの許可リスト（permissions）や、編集後の lint など機械的に強制したい検査（hooks）があれば、使用ツールごとの設定を提案する（permissions — Claude Code: `.claude/settings.json`、Codex: `config.toml`、Cursor: `.cursor/`）。hooks の作成は imk-hooks-creator スキルに従う — ツールごとにイベント名・設定ファイルの構造・入出力スキーマが異なり、参照資料なしで書くと一部ツール分が書けない・別ツールの書式が混入する。スキルが無い環境では各ツールの公式ドキュメントで仕様を確認してから書く（学習知識の推測で書かない）。テストスイート全実行のような重い処理は hooks に入れない。
-11. **採否の記録**: 使用ツール（手順 1）と、「要らない」と選ばれた項目をプロジェクトルートの `HARNESS.md` に記録し、以後どのエージェントも再確認・再提案しないようにする（例: `- verify スキル: 使わない（2026-07-12 ユーザー判断）`）。ファイルが無ければ `templates/HARNESS.md.template` を土台に作る。
+10. **permissions の提案**（選ばれた場合）: `references/permissions.md` を読み、
+    Auto-review 系のユーザー設定を上書きせず、プロジェクト固有の安全なコマンド、
+    sandbox 境界、明示的な高リスク操作、`.env` 系のアクセス保護を設定する。
+    lint / test / build 等の検証ループが必要な環境を読めることを先に確認し、秘密保護のために
+    検証コマンドを壊さない。`.env`を読める状態にする場合は、agentが読み得る経路と置いては
+    いけないsecretを具体的に示し、ユーザーの承諾を得てから設定する。
+    新しく自動実行可能になる操作と読めなくなるファイルを適用前に示し、ユーザーの確認後に
+    ツール別設定へ反映する。
+11. **hooks の提案**（選ばれた場合）: imk-hooks-creator スキルに従う。ツールごとに
+    イベント名・設定ファイルの構造・入出力スキーマが異なるため、参照資料なしで推測して
+    書かない。テストスイート全実行のような重い処理は hooks に入れない。permissions の
+    採否にかかわらず導入でき、permissions と併用する場合も役割を混同しない。
+12. **採否の記録**: 使用ツール（手順 1）と、「要らない」と選ばれた項目をプロジェクトルートの `HARNESS.md` に記録し、以後どのエージェントも再確認・再提案しないようにする（例: `- verify スキル: 使わない（2026-07-12 ユーザー判断）`）。ファイルが無ければ `templates/HARNESS.md.template` を土台に作る。
 
 ## 注意
 
